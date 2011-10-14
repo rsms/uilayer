@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=640,initial-scale=0.5,user-scalable=no">
+    <script src="http://movelang.org/move.js"></script>
+    <script src="../uilayer.js"></script>
+    <script type="text/move">
+
+import UILayer
+UILayer.debug = true
+
+rootLayer = UILayer { x:100, y:100, width:100, height:100, animated: true }
+document.body.appendChild rootLayer.element
+
+print 'rootLayer.anchorPoint ->', rootLayer.anchorPoint
+
+after {delay:1000} ^{
+  rootLayer.scale = 2
+}
+after {delay:2000} ^{
+  rootLayer.anchorPoint = [0, 0.1]
+  print 'rootLayer.anchorPoint ->', rootLayer.anchorPoint
+  rootLayer.scale = 1
+}
+after {delay:3000} ^{
+  rootLayer.anchorPoint = [1, 0.8]
+  print 'rootLayer.anchorPoint ->', rootLayer.anchorPoint
+  rootLayer.scale = 2
+}
+
+    </script>
+    <style>
+      * { margin:0; padding:0; border:none; }
+      html {
+        background: black url(checker-pattern.png) repeat scroll top left;
+        color: white;
+        font-family: "Helvetica";
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body></body>
+</html>

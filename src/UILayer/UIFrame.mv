@@ -1,0 +1,86 @@
+import .style_ext
+
+mkCSSPixelValueProperty = ^(name, eventPropertyName, defaultValue:0) {
+  return {
+    enumerable: true,
+    configurable: false,
+    get: ^{
+      if (v = @layer.element.style.getPropertyCSSValue name) {
+        if (v.primitiveType == CSSPrimitiveValue.CSS_PX)
+          return v.getFloatValue CSSPrimitiveValue.CSS_PX
+        # else probably "auto" thus default value
+      }
+      return defaultValue
+    },
+    set: ^(value) {
+      if (value == undefined || value == null) {
+        @layer.element.style.removeProperty name
+        return
+      }
+
+      if (typeof value == 'number')
+        @layer.element.style.setProperty name, value+'px', null
+      else
+        @layer.element.style.setProperty name, Text(value), null
+
+      @layer.emit 'UILayerFrameDidChange', {changedPropertyName:eventPropertyName}
+    }
+  }
+}
+
+
+mkCSSMatrix3DSingleProperty = ^(index, eventPropertyName, defaultValue:0) {
+  return {
+    enumerable: true,
+    configurable: false,
+    get: ^{
+      if (matrix3d = @layer.element.style.getMatrix3dTransform())
+        matrix3d[index].getFloatValue CSSPrimitiveValue.CSS_NUMBER
+      else
+        defaultValue
+    },
+    set: ^(value) {
+      if (value == undefined || value == null)
+        value = defaultValue
+      values = []
+      values[index] = value
+      @layer.element.style.setMatrix3dTransform values
+      @layer.emit 'UILayerFrameDidChange', {changedPropertyName:eventPropertyName}
+    }
+  }
+}
+
+# -----------------------
+
+props = {
+  width: mkCSSPixelValueProperty 'width', 'width', -1,
+  height: mkCSSPixelValueProperty 'height', 'height', -1,
+}
+props2D = {
+  x: mkCSSPixelValueProperty 'left', 'x',
+  y: mkCSSPixelValueProperty 'top', 'y',
+}
+props3D = {
+  x: mkCSSMatrix3DSingleProperty 12, 'x',
+  y: mkCSSMatrix3DSingleProperty 13, 'y',
+  #z: mkCSSMatrix3DSingleProperty 14,
+}
+
+// frame is an object with {x, y, width, height}
+module.exports = exports = UIFrame = class {
+  constructor: ^(layer) {
+    is3D = layer.is3DBacked
+    Object.defineProperties this, {
+      layer: {value:layer},
+      width: props.width,
+      height: props.height,
+      x: is3D ? props3D.x : props2D.x,
+      y: is3D ? props3D.y : props2D.y,
+    }
+  },
+
+  toString: ^{
+    '{x:'+@x+', y:'+@y+', width:'+@width+', height:'+@height+'}'
+  }
+}
+

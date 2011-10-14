@@ -1,0 +1,686 @@
+import .UIFrame
+
+if (document.body.classList) {
+  classNames = ^(el) { el.classList }
+  addClassName = ^(el, className) { el.classList.add className }
+  hasClassName = ^(el, className) { el.classList.contains className }
+  removeClassName = ^(el, className) { el.classList.remove className }
+} else {
+  classNames = ^(el) { el.className.split(/\s+/) }
+  addClassName = ^(el, className) { el.className += ' '+className }
+  hasClassName = ^(el, className) { classNames(el).indexOf(className) != -1 }
+  removeClassName = ^(el, className) {
+    el.className = classNames(el).filter(^(n){ n != className }).join ' '
+  }
+}
+
+_canonicalColor = ^(color) {
+  if (!(isArray = Array.isArray(color)) && typeof color == 'object') {
+    color = [color.r, color.g, color.b, color.a]
+    isArray = true
+  }
+  if (isArray) {
+    color = (255*Number(color[0] || 0)).toFixed(0)+','+
+            (255*Number(color[1] || 0)).toFixed(0)+','+
+            (255*Number(color[2] || 0)).toFixed(0)
+    if (color[3] != undefined) {
+      color = 'rgba('+color+','+Number(color[3] || 0)+')'
+    } else {
+      color = 'rgb('+color+')'
+    }
+  } else {
+    color = Text color
+  }
+  color
+}
+
+
+module.exports = UILayer = class {
+  constructor: ^{
+    specialProperties = {element:1, debug:1, x:1, y:1, width:1, height:1}
+    
+    # keyword arguments or an object as the first argument are explicit values
+    kwargs = typeof arguments[0] == 'object' ? arguments[0] : arguments.keywords || {}
+    # Setup element
+    element = kwargs.element
+    if (!element || typeof element != 'object' || !(element instanceof HTMLElement))
+      element = document.createElement 'div'
+    element.UILayer = this
+    kwargs.element = undefined
+    addClassName element, 'uilayer'
+    if (@className)  # from a subclass prototype
+      addClassName element, @className
+  
+    # Store element as a read-only value property
+    Object.defineProperties this, {element: {value:element}}
+
+    # Special properties
+    if (kwargs.x != undefined) @frame.x = kwargs.x
+    if (kwargs.y != undefined) @frame.y = kwargs.y
+    if (kwargs.width != undefined) @frame.width = kwargs.width
+    if (kwargs.height != undefined) @frame.height = kwargs.height
+    # Debug adds a random background color
+    if (kwargs.debug || (kwargs.debug == undefined && UILayer.debug))
+      element.style.backgroundColor = 'hsla('+(Math.random()*359)+', 90%, 90%, 0.5)'
+  
+    # Set any remaining properties
+    Object.prototype.forEach.call kwargs, ^(key, value) {
+      if (value != undefined && value != _MoveKWArgsT && !(key in specialProperties))
+        this[key] = value
+    }, this
+  }
+}
+
+
+# Default values
+#UILayer.debug = true
+
+# Constants
+Object.defineProperties UILayer, {
+  ANIMATE_ALL: {value:'all'},
+  ANIMATE_TRANSFORM: {value:'-webkit-transform,width,height,left,top'},
+  #ANIMATE_SCALE: {value:'-webkit-transform'},
+  ANIMATE_OPACITY: {value:'opacity'},
+  #ANIMATE_NONE: {value:'none'},
+}
+
+
+# Returns an array of all layers in DOM *element*
+UILayer.layersInElement = ^(element) {
+  sublayers = []
+  cn = element.childNodes
+  for (i=0; i < cn.length; ++i) {
+    el = cn[i]
+    if (el.UILayer && UILayer.prototype.isPrototypeOf el.UILayer) sublayers.push el.UILayer
+  }
+  sublayers
+}
+
+# Returns the first sublayer
+UILayer.firstLayerInElement = ^(element) {
+  cn = element.childNodes
+  for (i=0; i < cn.length; ++i) {
+    el = cn[i]
+    if (el.UILayer && UILayer.prototype.isPrototypeOf el.UILayer)
+      return el.UILayer
+  }
+}
+
+UILayer.layerWithTag = ^(tag) {
+  el = document.getElementById Text tag
+  (el && el.UILayer && UILayer.prototype.isPrototypeOf el.UILayer) && el.UILayer
+}
+
+
+# Simple toString function to aid in error messages, etc
+UILayer.toString = ^{ '[object UILayer]' }
+
+
+# Properties of the prototype
+UILayer.properties = {
+  is3DBacked: { get: ^{ @_is3DBacked } },
+  
+  allow3DBacking: {
+    get: ^{ !@_disallow3DBacking },
+    set: ^(allow){
+      if (allow) delete @_disallow3DBacking
+      else @_disallow3DBacking = true
+    }
+  },
+
+  sublayers: {
+    get: ^{ UILayer.layersInElement @element },
+    set: ^(sublayers) {
+      if (!Array.isArray sublayers)
+        throw TypeError 'sublayers argument must be an array of UILayers'
+      @sublayers.forEach ^(sublayer) { @element.removeChild sublayer }
+      sublayers.forEach ^(sublayer) { @addSublayer sublayer }, this
+    }
+  },
+  
+  firstSublayer: {
+    get: ^{ UILayer.firstLayerInElement @element }
+  },
+  
+  superlayer: {
+    get: ^{
+      (pel = @element.parentNode) && pel.UILayer && UILayer.prototype.isPrototypeOf(pel.UILayer) && pel.UILayer
+    }
+  },
+  
+  classNames: {
+    get: ^{ classNames @element },
+    set: ^(cssClassNames) {
+      if (Array.isArray cssClassNames)
+        cssClassNames = cssClassNames.join ' '
+      @element.className = cssClassNames
+    }
+  },
+  
+  frame: {
+    # frame is an object with {x, y, width, height}
+    get: ^{
+      if (!(frame_ = @frame_)) {
+        frame_ = UIFrame this
+        Object.defineProperty this, 'frame_', {value:frame_}
+      }
+      frame_
+    },
+    set: ^(frame) {
+      if (typeof frame != 'object') throw TypeError 'not an object'
+      frame_ = @frame
+      frame.forEach ^(name, value) { frame_[name] = value }
+    }
+  },
+  
+  computedBounds: {
+    get: ^{
+      style = @computedStyle
+      bounds = {width:0, height:0}
+      if ((v = style.getPropertyCSSValue 'width') && (v.primitiveType == CSSPrimitiveValue.CSS_PX)) {
+        bounds.width = v.getFloatValue CSSPrimitiveValue.CSS_PX
+      } else {
+        bounds.width = -1
+      }
+      if ((v = style.getPropertyCSSValue 'height') && (v.primitiveType == CSSPrimitiveValue.CSS_PX)) {
+        bounds.height = v.getFloatValue CSSPrimitiveValue.CSS_PX
+      } else {
+        bounds.height = -1
+      }
+      bounds
+    }
+  },
+  
+  computedStyle: {
+    get: ^{ window.getComputedStyle @element }
+  },
+  
+  style: {
+    get: ^{ @element.style },
+    set: ^(style) {
+      style_ = @element.style
+      style.forEach ^(k, v) { style_[k] = v }
+    },
+  },
+  
+  backgroundColor: {
+    get: ^{
+      color = @computedStyle.backgroundColor
+      if (color == 'transparent') color = null
+      color
+    },
+    set: ^(color) {
+      color = _canonicalColor color
+      @element.style.backgroundColor = color
+    },
+  },
+  
+  color: {
+    get: ^{ @computedStyle.color },
+    set: ^(color) { @element.style.color = color },
+  },
+  
+  hidden: {
+    get: ^{ @computedStyle.display == 'none' },
+    set: ^(hidden) { @computedStyle.display = hidden ? 'none' : null },
+  },
+  
+  clipsToBounds: {
+    get: ^{ @computedStyle.overflow == 'hidden' },
+    set: ^(clip) { @style.overflow = clip ? 'hidden' : null },
+  },
+  
+  opacity: {
+    get: ^{ (v = @computedStyle.getPropertyCSSValue 'opacity') && v.getFloatValue CSSPrimitiveValue.CSS_NUMBER },
+    set: ^(opacity) { @element.style.opacity = Number opacity },
+  },
+  
+  zPosition: {
+    get: ^{ (v = @computedStyle.getPropertyCSSValue 'z-index') && v.getFloatValue CSSPrimitiveValue.CSS_NUMBER },
+    set: ^(value) { @element.style.zIndex = Number(value).toFixed 0 },
+  },
+  
+  animated: {
+    get: ^{
+      if (!hasClassName @element, 'animated')
+        return false
+      @computedStyle.webkitTransitionProperty
+    },
+    set: ^(animated) {
+      if (animated && animated != UILayer.ANIMATE_NONE) {
+        if (!@_is3DBacked && !@_disallow3DBacking) @_set3DBacked true
+        addClassName @element, 'animated'
+        if (typeof animated != 'string') animated = UILayer.ANIMATE_ALL
+        else if (Array.isArray animated) animated = animated.join ','
+        @element.style.setProperty '-webkit-transition-property', animated, null
+      } else if (hasClassName @element, 'animated') {
+        #if (@_is3DBacked) @_set3DBacked false  # go back to being 2D-backed
+        removeClassName @element, 'animated'
+        @element.style.removeProperty '-webkit-transition'
+      }
+    }
+  },
+
+  animationDuration: {
+    get: ^{
+      if (v = @style.getPropertyCSSValue '-webkit-transition-duration') {
+        return v.getFloatValue CSSPrimitiveValue.CSS_MS
+      } else if (v = @computedStyle.getPropertyCSSValue '-webkit-transition-duration') {
+        return v[0].getFloatValue CSSPrimitiveValue.CSS_MS
+      }
+      0
+    },
+    set: ^(value) {
+      if (typeof value != 'number') throw TypeError 'animationDuration must be a number'
+      else if (value < 0) throw TypeError 'animationDuration must be a positive number'
+      @element.style.setProperty '-webkit-transition-duration', value.toFixed(0)+'ms', null
+    }
+  },
+  
+  animationTimingFunction: {
+    get: ^{
+      if (v = @computedStyle.getPropertyCSSValue '-webkit-transition-timing-function')
+        return v.cssText
+    },
+    set: ^(value) {
+      @element.style.setProperty '-webkit-transition-timing-function', value, null
+    }
+  },
+  
+  tag: {
+    get: ^{ @element.id },
+    set: ^(tag) { @element.id = Text tag },
+  },
+}
+
+
+# Properties for layers which are texture-backed
+UILayer.textureBackedProperties = {
+  
+  # Scale, 100% = 1.0
+  scale: {
+    get: ^{
+      # Note: This assumes uniform scale
+      ((matrix3d = @element.style.getMatrix3dTransform()) && matrix3d[0].getFloatValue CSSPrimitiveValue.CSS_NUMBER) || 1
+    },
+    set: ^(value) {
+      if (value == undefined || value == null)
+        value = 1
+      else if (typeof value != 'number')
+        value = Number value
+
+      if (value <= 0.0)
+        throw TypeError 'scale must be larger than zero'
+
+      if (!@_is3DBacked && !@_disallow3DBacking && !@_set3DBacked true)
+        return
+
+      @element.style.setMatrix3dTransform ({0: value, 5:value/*, 10:value*/})
+    }
+  },
+  
+  # Origin for transformations (e.g. scaling) in the layer's own coordinates.
+  # Defaults to {x:0, y:0}, accepts any number value (i.e. 123, "123px", "50%")
+  anchorPoint: {
+    get: ^{
+      point = [0.5, 0.5]
+      if (v = @element.style.getPropertyCSSValue '-webkit-transform-origin-x')
+        point[0] = v.getFloatValue(v.primitiveType)/100
+      if (v = @element.style.getPropertyCSSValue '-webkit-transform-origin-y')
+        point[1] = v.getFloatValue(v.primitiveType)/100
+      point
+    },
+    set: ^(origin) {
+      if (!@_is3DBacked && !@_disallow3DBacking) @_set3DBacked true
+      if (!Array.isArray origin) origin = [origin.x, origin.y]
+      if (origin[0] == 0.5 && origin[1] == 0.5) {
+        @element.style.removeProperty '-webkit-transform-origin'
+      } else {
+        @element.style.setProperty('-webkit-transform-origin',
+          (100*origin[0]).toFixed(0)+'% '+(100*origin[1]).toFixed(0)+'%', null)
+      }
+    }
+  }
+}
+
+
+UILayer.prototype._setupSublayer = ^(layer) {
+  if (!layer || UILayer.prototype.isPrototypeOf layer.UILayer)
+    throw TypeError 'Sublayer '+JSON(layer)+' is not a UILayer'
+  # TODO: frame width and height of zero should mean flex/follow parent
+  //if (layer.frame.width == 0) layer.frame.width = @frame.width
+  if (layer.frame.width < 0) {
+    # layer.frame.width = @frame.width
+    style = layer.element.style
+    if (!style.width) style.width = 'auto'
+    style.right = style.left = '0'
+  }
+  if (layer.frame.height < 0 && layer.style.height != 'inherit') {
+    # layer.frame.height = @frame.height
+    style = layer.element.style
+    if (!style.height) style.height = 'auto'
+    style.top = style.bottom = '0'
+  }
+}
+
+UILayer.prototype.addSublayer = ^(layer) {
+  @_setupSublayer layer
+  @element.appendChild layer.element
+  layer.emit 'uilayer:added-to-superlayer', {superlayer:this}
+  @emit 'uilayer:added-sublayer', {sublayer:layer}
+  layer
+}
+  
+UILayer.prototype.removeSublayer = ^(layer, index) {
+  cn = @element.childNodes
+  if (layer && UILayer.prototype.isPrototypeOf layer) {
+    el = layer.element
+  } else if (index && (index = Number index) >= 0 && !isNaN(index)) {
+    el = cn.item index
+  }
+  if (el && el.UILayer && UILayer.prototype.isPrototypeOf el.UILayer) {
+    try { @element.removeChild el } catch (e) { return undefined }
+    layer = el.UILayer
+    layer.emit 'uilayer:removed-from-superlayer', {superlayer:this}
+    @emit 'uilayer:removed-sublayer', {sublayer:layer}
+    return layer
+  }
+}
+
+UILayer.prototype.removeAllSublayers = ^{
+  removedSublayers = []
+  cn = @element.childNodes
+  for (i=0; i < cn.length; ++i) {
+    el = cn[i]
+    if (el.UILayer && UILayer.prototype.isPrototypeOf el.UILayer) {
+      removedSublayers.push el.UILayer
+      @element.removeChild el
+    }
+  }
+  removedSublayers
+}
+
+UILayer.prototype.setSublayerAtIndex = ^(index, layer) {
+  if (!layer || !UILayer.prototype.isPrototypeOf(layer))
+    layer = null
+  else
+    @_setupSublayer layer
+
+  if (index && (index = Number index) >= 0 && !isNaN(index)) {
+    el = @element.childNodes.item index
+    if (el && el.UILayer && UILayer.prototype.isPrototypeOf el.UILayer) {
+      if (layer) {
+        # Replace
+        @element.replaceChild layer.element, el
+        layer.emit 'uilayer:added-to-superlayer', {superlayer:this}
+        @emit 'uilayer:added-sublayer', {sublayer:layer}
+      } else {
+        # Remove
+        @element.removeChild el
+      }
+      el.UILayer.emit 'uilayer:removed-from-superlayer', {superlayer:this}
+      @emit 'uilayer:removed-sublayer', {sublayer:el.UILayer}
+      return el
+    }
+  }
+  
+  # Add
+  @element.appendChild layer.element
+  layer.emit 'uilayer:added-to-superlayer', {superlayer:this}
+  @emit 'uilayer:added-sublayer', {sublayer:layer}
+}
+
+
+  
+UILayer.prototype.superlayerInClassStructure = ^{  # class, class, ..
+  #expectedClassStructure = [UILayer, ExpandoContent, ExpandoCell]
+  expectedClassStructure = arguments
+  i = 0
+  superlayer = this
+  while (superlayer && (cls = expectedClassStructure[i++])) {
+    superlayer = superlayer.superlayer
+    if (!superlayer || !cls.prototype.isPrototypeOf superlayer) {
+      superlayer = undefined
+      break
+    }
+  }
+  superlayer
+}
+  
+UILayer.prototype.isSublayerOf = ^(superlayer) {
+  superlayer && UILayer.prototype.isPrototypeOf(superlayer) && @element.parentNode == superlayer.element
+}
+  
+UILayer.prototype.layerWithTag = UILayer.layerWithTag,
+  
+UILayer.prototype.toJSON = ^{
+  obj = {frame: @frame, scale: @scale, origin: @origin}
+  # Note: This is NOT meant to produce a complete rep, but rather a "hint" of the layer's state
+  if ((sublayers = @sublayers).length)
+    obj.sublayers = sublayers
+  if (@animated) {
+    obj.animated = true
+    obj.animationDelay = @animationDelay
+    obj.animationDuration = @animationDuration
+    obj.animationTimingFunction = @animationTimingFunction
+  }
+  obj
+}
+  
+UILayer.prototype._set3DBacked = ^(yesplease){
+  if (yesplease && !@_disallow3DBacking) {
+    # This isn't perfect, but... yeah.
+    addClassName @element, 'textureBacked'
+    @element.style.setProperty '-webkit-transform', 'matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1)', null
+    @_is3DBacked = true
+    
+    frame = @frame
+    @frame_ = null
+    @frame = frame
+    
+    return true
+  } else {
+    removeClassName @element, 'textureBacked'
+    @element.style.removeProperty '-webkit-transform'
+    @_is3DBacked = false
+  }
+  false
+}
+
+
+
+# ---------------------------------------------------------------------------------------
+# events
+
+isTouchDevice = false
+if ('ontouchstart' in window && 'ontouchend' in document) try {
+  document.createEvent "TouchEvent"
+  isTouchDevice = true
+} catch(e) {}
+
+
+# For non-touch devices, wrap touch event listeners to intercept mouse clicks and
+# fake the touch events, effectively normalizing the API (okay, almost)
+if (!isTouchDevice) {
+  touchEventsToMouseEvents = {touchstart:'mousedown', touchmove:'mousemove', touchend:'mouseup'}
+  makeFakeTouchEvent = ^(event, callback){
+    ^(ev) {
+      ev.touches = [{
+        clientX: ev.clientX,
+        clientY: ev.clientY,
+        identifier: ev.identifier,
+        pageX: ev.pageX,
+        pageY: ev.pageY,
+        screenX: ev.screenX,
+        screenY: ev.screenY,
+        target: ev.target,
+      }]
+      callback.apply this, Array.prototype.slice.call arguments
+    }
+  }
+  
+  UILayer.prototype.on = ^(type, handler) {
+    if (compatType = touchEventsToMouseEvents[type]) {
+      type = compatType
+      handler = makeFakeTouchEvent type, handler
+      # Note: There's no clean way of mapping touch and mouse events 1:1, so we just don't care
+      # about handle toggling of mousemove
+    }
+    layer = this
+    eventHandler = ^{ handler.apply layer, arguments }
+    @element.addEventListener type, eventHandler, false
+    eventHandler
+  }
+
+  UILayer.prototype.removeEventListener = ^(type, handler) {
+    @element.removeEventListener ((touchEventsToMouseEvents[type] || type), handler, false)
+    handler
+  }
+} else {
+  UILayer.prototype.on = ^(type, handler) {
+    layer = this
+    eventHandler = ^{ handler.apply layer, arguments }
+    @element.addEventListener type, eventHandler, false
+    eventHandler
+  }
+  
+  UILayer.prototype.removeEventListener = ^(type, handler) {
+    @element.removeEventListener type, handler, false
+    handler
+  }
+}
+
+
+# Events level 3 spec name->class mappings
+UIEvent = 'UIEvent'
+FocusEvent = 'FocusEvent'
+MouseEvent = 'MouseEvent'
+TouchEvent = 'TouchEvent'
+WheelEvent = 'WheelEvent'
+TextEvent = 'TextEvent'
+KeyboardEvent = 'KeyboardEvent'
+CompositionEvent = 'CompositionEvent'
+MutationEvent = 'MutationEvent'
+MutationNameEvent = 'MutationNameEvent'
+CustomEvent = 'CustomEvent'
+
+kEventClasses = {
+  DOMActivate:UIEvent, load:UIEvent, unload:UIEvent, abort:UIEvent, error:UIEvent,
+  select:UIEvent, resize:UIEvent, scroll:UIEvent,
+  
+  blur:FocusEvent, DOMFocusIn:FocusEvent, DOMFocusOut:FocusEvent, focus:FocusEvent,
+  focusin:FocusEvent, focusout:FocusEvent,
+  
+  click:MouseEvent, dblclick:MouseEvent, mousedown:MouseEvent, mouseenter:MouseEvent,
+  mouseleave:MouseEvent, mousemove:MouseEvent, mouseover:MouseEvent, mouseout:MouseEvent,
+  mouseup:MouseEvent,
+  
+  touchstart:TouchEvent, touchmove:TouchEvent, touchend:TouchEvent, touchcancel:TouchEvent,
+
+  wheel:WheelEvent,
+  
+  textinput:TextEvent,
+  
+  keydown:KeyboardEvent, keypress:KeyboardEvent, keyup:KeyboardEvent,
+  
+  compositionstart:CompositionEvent, compositionupdate:CompositionEvent, compositionend:CompositionEvent,
+  
+  DOMAttrModified:MutationEvent, DOMCharacterDataModified:MutationEvent, DOMNodeInserted:MutationEvent,
+  DOMNodeInsertedIntoDocument:MutationEvent, DOMNodeRemoved:MutationEvent,
+  DOMNodeRemovedFromDocument:MutationEvent, DOMSubtreeModified:MutationEvent,
+  
+  DOMAttributeNameChanged:MutationNameEvent, DOMElementNameChanged:MutationNameEvent,
+}
+
+
+# emit {type, bubbles:true, cancelable:true, ...} -> bool
+# emit type, {bubbles:true, cancelable:true, ...} -> bool
+# The return value is false if at least one of the event handlers which
+# handled this event called preventDefault. Otherwise it returns true.
+UILayer.prototype.emit = ^{
+  if (typeof arguments[0] == 'object')
+    options = arguments[0]
+  else if (typeof arguments.keywords == 'object')
+    options = arguments.keywords
+  else {
+    options = (typeof arguments[1] == 'object') ? arguments[1] : {}
+    options.type = arguments[0]
+  }
+  if (!options.type) throw Error 'no event type specified'
+
+  eventClass = kEventClasses[options.type] || CustomEvent
+  
+  if (eventClass == TouchEvent && !isTouchDevice) {
+    # need to convert
+    options.type = touchEventsToMouseEvents[options.type]
+    eventClass = kEventClasses[options.type] || CustomEvent
+  }
+  
+  ev = document.createEvent eventClass
+  
+  options.bubbles = !!(options.bubbles == undefined ? true : options.bubbles)
+  options.cancelable = !!(options.cancelable == undefined ? true : options.cancelable)
+  
+  if (eventClass == UIEvent) {
+    ev.initUIEvent(options.type, options.bubbles, options.cancelable, (options.view || window),
+                   (options.detail != undefined ? options.detail : 1) )
+  } else if (eventClass == MouseEvent) {
+    ev.initMouseEvent(options.type, options.bubbles, options.cancelable, (options.view || window),
+                      (options.detail != undefined ? options.detail : 1),
+                      options.screenX, options.screenY,
+                      options.clientX, options.clientY,
+                      !!options.ctrlKey, !!options.altKey, !!options.shiftKey, !!options.metaKey,
+                      options.button != undefined ? Number(options.button) : undefined,
+                      options.relatedTarget  # an EventTarget
+                     )
+  } else {
+    if (eventClass == CustomEvent) {
+      ev.initCustomEvent options.type, options.bubbles, options.cancelable, options.detail
+    } else {
+      ev.initEvent options.type, options.bubbles, options.cancelable
+    }
+    keysToIgnore = {__kw:1,type:1,bubbles:1,cancelable:1,detail:1}
+    options.forEach ^(key, value) {
+      if (key in keysToIgnore) return
+      ev[key] = value
+    }
+  }
+  
+  @element.dispatchEvent ev
+}
+
+
+#e.__proto__ = proto #Object.create e.__proto__, properties
+Object.defineProperties UILayer.prototype, UILayer.properties
+Object.defineProperties UILayer.prototype, UILayer.textureBackedProperties
+
+# ---------------------------------------------------------------------------------------
+
+# Add style to document
+if ((head = document.getElementsByTagName('head')).length) head = head[0]
+else head = document.body
+baseStyle = document.createElement 'style'
+baseStyle.id = 'UILayer-base-style'
+baseStyle.appendChild document.createTextNode '.uilayer {'+
+'  display: block;'+
+'  position: absolute;'+
+'  left:0; top:0; width:0; height:0;'+
+'  overflow: visible;'+
+'  -webkit-user-select:none;'+
+'  -webkit-text-size-adjust:none;'+
+'  z-index:0;'+
+'  opacity:1;'+
+'}\n'+
+'.uilayer.textureBacked {'+
+'  -webkit-transform-origin: 50% 50%;'+
+'}\n'+
+'.uilayer.animated {'+
+'  -webkit-transition-duration: 500ms;'+
+'  -webkit-transition-timing-function: ease;'+
+'  -webkit-transition-delay: 0;'+
+'  -webkit-transition-property: none;'+
+'}'
+
+head.appendChild baseStyle
+
+
