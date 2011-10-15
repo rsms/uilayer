@@ -623,7 +623,13 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   UILayer.prototype.removeFromSuperlayer = function removeFromSuperlayer() {
     var superlayer;
     if (!(superlayer = this.superlayer)) throw Error("Not attached to any superlayer");
-    return superlayer.element.removeChild(this.element);
+    superlayer.element.removeChild(this.element);
+    this.emit("uilayer:removed-from-superlayer", {
+      superlayer: superlayer
+    });
+    return superlayer.emit("uilayer:removed-sublayer", {
+      sublayer: this
+    });
   };
   UILayer.prototype.removeAllSublayers = function removeAllSublayers() {
     var removedSublayers, cn, i, el;

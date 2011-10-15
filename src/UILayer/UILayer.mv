@@ -468,6 +468,8 @@ UILayer.prototype.removeFromSuperlayer = ^{
   if (!(superlayer = @superlayer))
     throw Error 'Not attached to any superlayer'
   superlayer.element.removeChild @element
+  @emit 'uilayer:removed-from-superlayer', {superlayer:superlayer}
+  superlayer.emit 'uilayer:removed-sublayer', {sublayer:this}
 }
 
 UILayer.prototype.removeAllSublayers = ^{
