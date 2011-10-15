@@ -1,2 +1,9 @@
-import .style_ext, .UILayer
-module.exports = exports = UILayer
+# We only support webkit for the time being
+if (   typeof window == 'undefined'
+    || !window.navigator
+    || window.navigator.userAgent.indexOf('WebKit') == -1) {
+  return print 'Error: UILayer is only compatible with WebKit'
+}
+
+module.exports = exports = require './UILayer'
+export version = '0.0.2'

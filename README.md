@@ -80,7 +80,7 @@ Hide or show the layer. Defaults to false.
 A hidden view disappears from its window and does not receive input events. It remains in its superview’s list of sublayers, however, and participates in autoresizing as usual. Hiding a view with sublayers has the effect of hiding those sublayers and any view descendants they might have. This effect is implicit and does not alter the hidden state of the receiver’s descendants.
 
 
-### `layer.clipsToBounds ⇄ bool`
+### `layer.masksToBoundsBounds ⇄ bool`
 
 Determines whether sublayers are confined to the bounds of the receiver. Defaults to false.
 

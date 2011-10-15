@@ -21,7 +21,7 @@ ClockLayer = class UILayer, {
     UILayer.prototype.constructor.apply this, arguments
     @element = <div class="time">3:14<span class="mer">PM</span></div>
     @style = {textAlign: 'right', color:'white', fontSize: '35px', lineHeight: '40px'}
-    @clipsToBounds = true
+    @masksToBoundsBounds = true
     @updateTime()
   },
 

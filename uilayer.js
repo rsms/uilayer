@@ -1,9 +1,12 @@
 Move.require.define("UILayer","UILayer/index.mv",function(require,module,exports){
-  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, style_ext, UILayer;
+  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, version;
   M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
   EHTML = Move.EHTML;
-  style_ext = require("./style_ext"), UILayer = require("./UILayer");
-  return module.exports = exports = UILayer;
+  if (typeof window === "undefined" || !window.navigator || window.navigator.userAgent.indexOf("WebKit") === -1) {
+    return print("Error: UILayer is only compatible with WebKit");
+  }
+  module.exports = exports = require("./UILayer");
+  exports.version = version = "0.0.2";
 });
 Move.require.define("UILayer/style_ext","UILayer/style_ext.mv",function(require,module,exports){
   var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML;
@@ -132,7 +135,7 @@ Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,modu
   });
 });
 Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,module,exports){
-  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, UIFrame, classNames, addClassName, hasClassName, removeClassName, _canonicalColor, UILayer, isTouchDevice, touchEventsToMouseEvents, makeFakeTouchEvent, UIEvent, FocusEvent, MouseEvent, TouchEvent, WheelEvent, TextEvent, KeyboardEvent, CompositionEvent, MutationEvent, MutationNameEvent, CustomEvent, kEventClasses, head, baseStyle;
+  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, UIFrame, classNames, addClassName, hasClassName, removeClassName, _canonicalColor, UILayer, isTouchDevice, touchEventsToMouseEvents, makeFakeTouchEvent, UIEvent, FocusEvent, MouseEvent, TouchEvent, WheelEvent, TextEvent, KeyboardEvent, CompositionEvent, MutationEvent, MutationNameEvent, CustomEvent, TransitionEvent, kEventClasses, head, baseStyle;
   M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
   EHTML = Move.EHTML;
   UIFrame = require("./UIFrame");
@@ -415,7 +418,7 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
         return this.computedStyle.display = hidden ? "none" : null;
       }
     },
-    clipsToBounds: {
+    masksToBoundsBounds: {
       get: function () {
         return this.computedStyle.overflow === "hidden";
       },
@@ -762,6 +765,7 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   MutationEvent = "MutationEvent";
   MutationNameEvent = "MutationNameEvent";
   CustomEvent = "CustomEvent";
+  TransitionEvent = "TransitionEvent";
   kEventClasses = {
     DOMActivate: UIEvent,
     load: UIEvent,
@@ -806,7 +810,8 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
     DOMNodeRemovedFromDocument: MutationEvent,
     DOMSubtreeModified: MutationEvent,
     DOMAttributeNameChanged: MutationNameEvent,
-    DOMElementNameChanged: MutationNameEvent
+    DOMElementNameChanged: MutationNameEvent,
+    transitionend: TransitionEvent
   };
   UILayer.prototype.emit = function emit() {
     var options, eventClass, ev, keysToIgnore;
@@ -820,13 +825,18 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
       options.type = touchEventsToMouseEvents[options.type];
       eventClass = kEventClasses[options.type] || CustomEvent;
     }
-    ev = document.createEvent(eventClass);
+    if (!(ev = document.createEvent(eventClass))) {
+      eventClass = CustomEvent;
+      ev = document.createEvent(eventClass);
+    }
     options.bubbles = !!(options.bubbles === undefined ? true : options.bubbles);
     options.cancelable = !!(options.cancelable === undefined ? true : options.cancelable);
     if (eventClass === UIEvent) {
       ev.initUIEvent(options.type, options.bubbles, options.cancelable, options.view || window, options.detail !== undefined ? options.detail : 1);
     } else if (eventClass === MouseEvent) {
       ev.initMouseEvent(options.type, options.bubbles, options.cancelable, options.view || window, options.detail !== undefined ? options.detail : 1, options.screenX, options.screenY, options.clientX, options.clientY, !!options.ctrlKey, !!options.altKey, !!options.shiftKey, !!options.metaKey, options.button !== undefined ? Number(options.button) : undefined, options.relatedTarget);
+    } else if (eventClass === TransitionEvent) {
+      ev.initTransitionEvent(options.type, options.bubbles, options.cancelable, options.propertyName, options.elapsedTime);
     } else {
       if (eventClass === CustomEvent) {
         ev.initCustomEvent(options.type, options.bubbles, options.cancelable, options.detail);
@@ -853,6 +863,6 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   if ((head = document.getElementsByTagName("head")).length) head = head[0]; else head = document.body;
   baseStyle = document.createElement("style");
   baseStyle.id = "UILayer-base-style";
-  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  position: absolute;" + "  left:0; top:0; width:0; height:0;" + "  overflow: visible;" + "  -webkit-user-select:none;" + "  -webkit-text-size-adjust:none;" + "  z-index:0;" + "  opacity:1;" + "}\n" + ".uilayer.textureBacked {" + "  -webkit-transform-origin: 50% 50%;" + "}\n" + ".uilayer.animated {" + "  -webkit-transition-duration: 500ms;" + "  -webkit-transition-timing-function: ease;" + "  -webkit-transition-delay: 0;" + "  -webkit-transition-property: none;" + "}"));
+  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  position: absolute;" + "  left:0; top:0; width:auto; height:auto;" + "  overflow: visible;" + "  -webkit-user-select:none;" + "  -webkit-text-size-adjust:none;" + "  z-index:0;" + "  opacity:1;" + "}\n" + ".uilayer.textureBacked {" + "  -webkit-transform-origin: 50% 50%;" + "}\n" + ".uilayer.animated {" + "  -webkit-transition-duration: 500ms;" + "  -webkit-transition-timing-function: ease;" + "  -webkit-transition-delay: 0;" + "  -webkit-transition-property: none;" + "}"));
   return head.appendChild(baseStyle);
 });

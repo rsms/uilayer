@@ -13,7 +13,7 @@ rootLayer.on 'uilayer:added-sublayer', ^(ev) {
 rootLayer.on 'uilayer:removed-sublayer', ^(ev) {
   print "rootLayer.on 'uilayer:removed-sublayer' sublayer:", ev.sublayer }
 
-#rootLayer.clipsToBounds = true
+#rootLayer.masksToBoundsBounds = true
 
 print 'rootLayer.frame -> '+rootLayer.frame
 print 'JSON rootLayer.frame ->', JSON rootLayer.frame

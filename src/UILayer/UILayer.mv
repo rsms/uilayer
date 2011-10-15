@@ -225,7 +225,7 @@ UILayer.properties = {
     set: ^(hidden) { @computedStyle.display = hidden ? 'none' : null },
   },
   
-  clipsToBounds: {
+  masksToBoundsBounds: {
     get: ^{ @computedStyle.overflow == 'hidden' },
     set: ^(clip) { @style.overflow = clip ? 'hidden' : null },
   },
@@ -502,6 +502,7 @@ if ('ontouchstart' in window && 'ontouchend' in document) try {
 # For non-touch devices, wrap touch event listeners to intercept mouse clicks and
 # fake the touch events, effectively normalizing the API (okay, almost)
 if (!isTouchDevice) {
+  # Note: This is still WIP and currently broken
   touchEventsToMouseEvents = {touchstart:'mousedown', touchmove:'mousemove', touchend:'mouseup'}
   makeFakeTouchEvent = ^(event, callback){
     ^(ev) {
@@ -563,6 +564,7 @@ CompositionEvent = 'CompositionEvent'
 MutationEvent = 'MutationEvent'
 MutationNameEvent = 'MutationNameEvent'
 CustomEvent = 'CustomEvent'
+TransitionEvent = 'TransitionEvent'
 
 kEventClasses = {
   DOMActivate:UIEvent, load:UIEvent, unload:UIEvent, abort:UIEvent, error:UIEvent,
@@ -590,6 +592,8 @@ kEventClasses = {
   DOMNodeRemovedFromDocument:MutationEvent, DOMSubtreeModified:MutationEvent,
   
   DOMAttributeNameChanged:MutationNameEvent, DOMElementNameChanged:MutationNameEvent,
+  
+  transitionend: TransitionEvent
 }
 
 
@@ -616,7 +620,10 @@ UILayer.prototype.emit = ^{
     eventClass = kEventClasses[options.type] || CustomEvent
   }
   
-  ev = document.createEvent eventClass
+  if (!(ev = document.createEvent eventClass)) {
+    eventClass = CustomEvent
+    ev = document.createEvent eventClass
+  }
   
   options.bubbles = !!(options.bubbles == undefined ? true : options.bubbles)
   options.cancelable = !!(options.cancelable == undefined ? true : options.cancelable)
@@ -633,6 +640,10 @@ UILayer.prototype.emit = ^{
                       options.button != undefined ? Number(options.button) : undefined,
                       options.relatedTarget  # an EventTarget
                      )
+  } else if (eventClass == TransitionEvent) {
+    ev.initTransitionEvent(options.type, options.bubbles, options.cancelable,
+                           options.propertyName,
+                           options.elapsedTime /* float */ )
   } else {
     if (eventClass == CustomEvent) {
       ev.initCustomEvent options.type, options.bubbles, options.cancelable, options.detail
@@ -664,7 +675,7 @@ baseStyle.id = 'UILayer-base-style'
 baseStyle.appendChild document.createTextNode '.uilayer {'+
 '  display: block;'+
 '  position: absolute;'+
-'  left:0; top:0; width:0; height:0;'+
+'  left:0; top:0; width:auto; height:auto;'+
 '  overflow: visible;'+
 '  -webkit-user-select:none;'+
 '  -webkit-text-size-adjust:none;'+
