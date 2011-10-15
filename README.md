@@ -2,7 +2,7 @@
 
 UILayer provides an API on top of the WebKit DOM **for working with the concept of layers**. Instead of manipulating DOM elements using a myriad of mixed concepts, you go though a single, well defined API.
 
-Have a look at this crazy demo: [http://hunch.se/tmp/uilayer/examples/](http://hunch.se/tmp/uilayer/examples/). See the "examples" directory for more examples.
+Have a look at this crazy demo: [http://hunch.se/tmp/uilayer/examples/](http://hunch.se/tmp/uilayer/examples/) or try [flipping some pages in the flip-book demo](http://hunch.se/tmp/uilayer/examples/flip-book.html). See the "examples" directory for more examples.
 
 
 ## Building and using
