@@ -225,7 +225,7 @@ UILayer.properties = {
     set: ^(hidden) { @computedStyle.display = hidden ? 'none' : null },
   },
   
-  masksToBoundsBounds: {
+  masksToBounds: {
     get: ^{ @computedStyle.overflow == 'hidden' },
     set: ^(clip) { @style.overflow = clip ? 'hidden' : null },
   },

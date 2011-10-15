@@ -418,7 +418,7 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
         return this.computedStyle.display = hidden ? "none" : null;
       }
     },
-    masksToBoundsBounds: {
+    masksToBounds: {
       get: function () {
         return this.computedStyle.overflow === "hidden";
       },
