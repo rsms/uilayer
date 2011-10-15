@@ -93,7 +93,7 @@ Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,modu
   });
 });
 Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,module,exports){
-  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, UIFrame, classNames, addClassName, hasClassName, removeClassName, _canonicalColor, UILayer, isTouchDevice, touchEventsToMouseEvents, makeFakeTouchEvent, UIEvent, FocusEvent, MouseEvent, TouchEvent, WheelEvent, TextEvent, KeyboardEvent, CompositionEvent, MutationEvent, MutationNameEvent, CustomEvent, TransitionEvent, kEventClasses, head, baseStyle;
+  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, UIFrame, classNames, addClassName, hasClassName, removeClassName, _canonicalColor, kSpecialProperties, UILayer, isTouchDevice, touchEventsToMouseEvents, makeFakeTouchEvent, UIEvent, FocusEvent, MouseEvent, TouchEvent, WheelEvent, TextEvent, KeyboardEvent, CompositionEvent, MutationEvent, MutationNameEvent, CustomEvent, TransitionEvent, kEventClasses, head, baseStyle;
   M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
   EHTML = Move.EHTML;
   UIFrame = require("./UIFrame");
@@ -154,20 +154,20 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
     }
     return color;
   };
+  kSpecialProperties = {
+    element: 1,
+    debug: 1,
+    x: 1,
+    y: 1,
+    width: 1,
+    height: 1,
+    className: 1
+  };
   module.exports = UILayer = __class(UILayer = function UILayer() {
     return __class.create(UILayer, arguments);
   }, {
     constructor: function () {
-      var specialProperties, kwargs, element;
-      specialProperties = {
-        element: 1,
-        debug: 1,
-        x: 1,
-        y: 1,
-        width: 1,
-        height: 1,
-        className: 1
-      };
+      var kwargs, element;
       kwargs = typeof arguments[0] === "object" ? arguments[0] : arguments.keywords || {};
       element = kwargs.element;
       if (!element || typeof element !== "object" || !(element instanceof HTMLElement)) element = document.createElement("div");
@@ -191,7 +191,7 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
       if (kwargs.debug || kwargs.debug === undefined && UILayer.debug) element.style.backgroundColor = "hsla(" + Math.random() * 359 + ", 90%, 90%, 0.5)";
       return Object.prototype.forEach.call(kwargs, function (key, value) {
         key !== null && typeof key === "object" && key.__kw === _MoveKWArgsT && (arguments.keywords = key, value = key.value, key = key.key);
-        if (value !== undefined && value !== _MoveKWArgsT && !(key in specialProperties)) return this[key] = value;
+        if (value !== undefined && value !== _MoveKWArgsT && !(key in kSpecialProperties)) return this[key] = value;
       }, this);
     }
   });

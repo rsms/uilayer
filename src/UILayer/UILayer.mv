@@ -34,11 +34,10 @@ _canonicalColor = ^(color) {
   color
 }
 
+kSpecialProperties = {element:1, debug:1, x:1, y:1, width:1, height:1, className:1}
 
 module.exports = UILayer = class {
   constructor: ^{
-    specialProperties = {element:1, debug:1, x:1, y:1, width:1, height:1, className:1}
-    
     # keyword arguments or an object as the first argument are explicit values
     kwargs = typeof arguments[0] == 'object' ? arguments[0] : arguments.keywords || {}
     # Setup element
@@ -72,7 +71,7 @@ module.exports = UILayer = class {
   
     # Set any remaining properties
     Object.prototype.forEach.call kwargs, ^(key, value) {
-      if (value != undefined && value != _MoveKWArgsT && !(key in specialProperties))
+      if (value != undefined && value != _MoveKWArgsT && !(key in kSpecialProperties))
         this[key] = value
     }, this
   }
