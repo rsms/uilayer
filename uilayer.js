@@ -182,7 +182,6 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
         }
       });
       addClassName(this.element, "textureBacked");
-      element.style.setProperty("-webkit-transform", "matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1)", null);
       this._is3DBacked = true;
       if (kwargs.x !== undefined) this.frame.x = kwargs.x;
       if (kwargs.y !== undefined) this.frame.y = kwargs.y;
@@ -886,6 +885,6 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   if ((head = document.getElementsByTagName("head")).length) head = head[0]; else head = document.body || document.documentElement;
   baseStyle = document.createElement("style");
   baseStyle.id = "UILayer-base-style";
-  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  visibility: visible;" + "  position: absolute;" + "  left:0; top:0; width:auto; height:auto;" + "  overflow: visible;" + "  -webkit-user-select:none;" + "  -webkit-text-size-adjust:none;" + "  z-index:0;" + "  opacity:1;" + "}\n" + ".uilayer.textureBacked {" + "  -webkit-transform-origin: 50% 50% 0%;" + "  -webkit-backface-visibility: hidden;" + "}\n" + ".uilayer.animated {" + "  -webkit-transition-duration: 500ms;" + "  -webkit-transition-timing-function: ease;" + "  -webkit-transition-delay: 0;" + "  -webkit-transition-property: none;" + "}"));
+  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  visibility: visible;" + "  position: absolute;" + "  left:0; top:0; width:auto; height:auto;" + "  overflow: visible;" + "  -webkit-user-select:none;" + "  -webkit-text-size-adjust:none;" + "  z-index:0;" + "  opacity:1;" + "}\n" + ".uilayer.textureBacked {" + "  -webkit-transform: matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);" + "  -webkit-transform-origin: 50% 50% 0%;" + "  -webkit-backface-visibility: hidden;" + "}\n" + ".uilayer.animated {" + "  -webkit-transition-duration: 500ms;" + "  -webkit-transition-timing-function: ease;" + "  -webkit-transition-delay: 0;" + "  -webkit-transition-property: none;" + "}"));
   return head.appendChild(baseStyle);
 });
