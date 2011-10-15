@@ -7,9 +7,9 @@ Have a look at this crazy demo: [http://hunch.se/tmp/uilayer/examples/](http://h
 
 ## Building and using
 
-Either use the precompiled [uilayer.js](https://raw.github.com/rsms/uilayer/master/uilayer.js) JavaScript library or use the Move source files in the "src" directory directly.
+Either use the precompiled [uilayer.js](https://raw.github.com/rsms/uilayer/master/uilayer.js) JavaScript library together with the [Move runtime](http://movelang.org/move-rt.js) or use the [Move](http://movelang.org/) source files in the "src" directory directly.
 
-You can also build a JavaScript library from the source files (requires move >=0.4.4):
+You can also build a JavaScript library from the source files (requires [move](http://movelang.org/) >=0.4.4):
 
     move compile -d src -o uilayer.js
 
