@@ -2,6 +2,7 @@
 if (   typeof window == 'undefined'
     || !window.navigator
     || window.navigator.userAgent.indexOf('WebKit') == -1) {
+  module.exports = null
   return print 'Error: UILayer is only compatible with WebKit'
 }
 

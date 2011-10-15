@@ -11,6 +11,7 @@
     <script type="text/move">
 
 import UILayer
+if (!UILayer) return alert 'Unsupported web view (UILayer only supports WebKit)'
 UILayer.debug = true
 
 rootLayer = UILayer { x:window.innerWidth-310, y:50, width:1, height:500, animated:'transform' }

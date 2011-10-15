@@ -3,6 +3,7 @@ Move.require.define("UILayer","UILayer/index.mv",function(require,module,exports
   M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
   EHTML = Move.EHTML;
   if (typeof window === "undefined" || !window.navigator || window.navigator.userAgent.indexOf("WebKit") === -1) {
+    module.exports = null;
     return print("Error: UILayer is only compatible with WebKit");
   }
   module.exports = exports = require("./UILayer");

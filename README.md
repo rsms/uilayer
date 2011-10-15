@@ -2,10 +2,19 @@
 
 UILayer provides an API on top of the WebKit DOM **for working with the concept of layers**. Instead of manipulating DOM elements using a myriad of mixed concepts, you go though a single, well defined API.
 
-Have a look at this crazy demo: [http://hunch.se/tmp/uilayer/examples/](http://hunch.se/tmp/uilayer/examples/) or try [flipping some pages in the flip-book demo](http://hunch.se/tmp/uilayer/examples/flip-book.html). See the "examples" directory for more examples.
+
+## Examples
+
+- [Psychotic layers randomly moving around inside another layer](http://hunch.se/tmp/uilayer/examples/)
+
+- [Flip some pages in the Flip Book](http://hunch.se/tmp/uilayer/examples/flip-book.html)
+
+See the "examples" directory for more examples.
+
+> Note: UILayer only works in WebKit-based environments, such as web views on Apple iOS, OS X and Android or in web browsers like Google Chrome and Safari.
 
 
-## Building and using
+## Usage
 
 Either use the precompiled [uilayer.js](https://raw.github.com/rsms/uilayer/master/uilayer.js) JavaScript library together with the [Move runtime](http://movelang.org/move-rt.js) or use the [Move](http://movelang.org/) source files in the "src" directory directly.
 
