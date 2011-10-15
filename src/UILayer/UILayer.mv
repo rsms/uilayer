@@ -37,7 +37,7 @@ _canonicalColor = ^(color) {
 
 module.exports = UILayer = class {
   constructor: ^{
-    specialProperties = {element:1, debug:1, x:1, y:1, width:1, height:1}
+    specialProperties = {element:1, debug:1, x:1, y:1, width:1, height:1, className:1}
     
     # keyword arguments or an object as the first argument are explicit values
     kwargs = typeof arguments[0] == 'object' ? arguments[0] : arguments.keywords || {}
@@ -50,9 +50,16 @@ module.exports = UILayer = class {
     addClassName element, 'uilayer'
     if (@className)  # from a subclass prototype
       addClassName element, @className
+    if (kwargs.className)
+      addClassName element, kwargs.className
   
     # Store element as a read-only value property
     Object.defineProperties this, {element: {value:element}}
+    
+    # 3D-backed
+    addClassName @element, 'textureBacked'
+    element.style.setProperty '-webkit-transform', 'matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1)', null
+    @_is3DBacked = true
 
     # Special properties
     if (kwargs.x != undefined) @frame.x = kwargs.x
@@ -69,19 +76,6 @@ module.exports = UILayer = class {
         this[key] = value
     }, this
   }
-}
-
-
-# Default values
-#UILayer.debug = true
-
-# Constants
-Object.defineProperties UILayer, {
-  ANIMATE_ALL: {value:'all'},
-  ANIMATE_TRANSFORM: {value:'-webkit-transform,width,height,left,top'},
-  #ANIMATE_SCALE: {value:'-webkit-transform'},
-  ANIMATE_OPACITY: {value:'opacity'},
-  #ANIMATE_NONE: {value:'none'},
 }
 
 
@@ -118,15 +112,7 @@ UILayer.toString = ^{ '[object UILayer]' }
 
 # Properties of the prototype
 UILayer.properties = {
-  is3DBacked: { get: ^{ @_is3DBacked } },
-  
-  allow3DBacking: {
-    get: ^{ !@_disallow3DBacking },
-    set: ^(allow){
-      if (allow) delete @_disallow3DBacking
-      else @_disallow3DBacking = true
-    }
-  },
+  is3DBacked: { get: ^{ !!@_is3DBacked } },
 
   sublayers: {
     get: ^{ UILayer.layersInElement @element },
@@ -191,6 +177,9 @@ UILayer.properties = {
     }
   },
   
+  # -------------------------------------------------------------------------------------------
+  # Style Attributes
+  
   computedStyle: {
     get: ^{ window.getComputedStyle @element }
   },
@@ -201,6 +190,28 @@ UILayer.properties = {
       style_ = @element.style
       style.forEach ^(k, v) { style_[k] = v }
     },
+  },
+  
+  doubleSided: {
+    get: ^{ @element.style.webkitBackfaceVisibility == 'visible' },
+    set: ^(doubleSided) {
+      if (doubleSided) {
+        @element.style.setProperty '-webkit-backface-visibility', 'visible', null
+      } else {
+        @element.style.removeProperty '-webkit-backface-visibility'
+      }
+    },
+  },
+  
+  cornerRadius: {
+    get: ^{ (v = @computedStyle.getPropertyCSSValue '-webkit-border-top-left-radius') && v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 0 },
+    set: ^(value) {
+      if (value && (value = Number value)) {
+        @element.style.webkitBorderRadius = value.toFixed(0)+'px'
+      } else {
+        @element.style.webkitBorderRadius = null
+      }
+    }
   },
   
   backgroundColor: {
@@ -221,8 +232,8 @@ UILayer.properties = {
   },
   
   hidden: {
-    get: ^{ @computedStyle.display == 'none' },
-    set: ^(hidden) { @computedStyle.display = hidden ? 'none' : null },
+    get: ^{ @computedStyle.visibility == 'hidden' },
+    set: ^(hidden) { @computedStyle.visibility = hidden ? 'hidden' : null },
   },
   
   masksToBounds: {
@@ -247,14 +258,21 @@ UILayer.properties = {
       @computedStyle.webkitTransitionProperty
     },
     set: ^(animated) {
-      if (animated && animated != UILayer.ANIMATE_NONE) {
-        if (!@_is3DBacked && !@_disallow3DBacking) @_set3DBacked true
+      if (animated && animated != 'none') {
         addClassName @element, 'animated'
-        if (typeof animated != 'string') animated = UILayer.ANIMATE_ALL
-        else if (Array.isArray animated) animated = animated.join ','
+        
+        if (animated == 'geometry') {
+          animated = '-webkit-transform,width,height'
+        } else if (animated == 'transform') {
+          animated = '-webkit-transform'
+        } else if (Array.isArray animated) {
+          animated = animated.join ','
+        } else if (typeof animated != 'string') {
+          animated = 'all'
+        }
+        
         @element.style.setProperty '-webkit-transition-property', animated, null
       } else if (hasClassName @element, 'animated') {
-        #if (@_is3DBacked) @_set3DBacked false  # go back to being 2D-backed
         removeClassName @element, 'animated'
         @element.style.removeProperty '-webkit-transition'
       }
@@ -296,12 +314,30 @@ UILayer.properties = {
 
 # Properties for layers which are texture-backed
 UILayer.textureBackedProperties = {
+  matrix: {
+    get: ^{
+      @_matrix || (@_matrix = new WebKitCSSMatrix(@element.style.webkitTransform))
+    },
+    set: ^{
+      M = @_matrix = arguments[0]
+      if (!M || !(M instanceof WebKitCSSMatrix)) {
+        @_matrix = null
+        @element.style.webkitTransform = null
+      } else {
+        @element.style.webkitTransform = 'matrix3d('+
+          M.m11+','+M.m12+','+M.m13+','+M.m14+','+
+          M.m21+','+M.m22+','+M.m23+','+M.m24+','+
+          M.m31+','+M.m32+','+M.m33+','+M.m34+','+
+          M.m41+','+M.m42+','+M.m43+','+M.m44+')'
+      }
+    }
+  },
   
-  # Scale, 100% = 1.0
+  # Scale [0-inf) -- 1.0 = 100%
   scale: {
     get: ^{
       # Note: This assumes uniform scale
-      ((matrix3d = @element.style.getMatrix3dTransform()) && matrix3d[0].getFloatValue CSSPrimitiveValue.CSS_NUMBER) || 1
+      @matrix.m11
     },
     set: ^(value) {
       if (value == undefined || value == null)
@@ -311,33 +347,74 @@ UILayer.textureBackedProperties = {
 
       if (value <= 0.0)
         throw TypeError 'scale must be larger than zero'
-
-      if (!@_is3DBacked && !@_disallow3DBacking && !@_set3DBacked true)
-        return
-
-      @element.style.setMatrix3dTransform ({0: value, 5:value/*, 10:value*/})
+      
+      matrix = @matrix
+      matrix.m11 = value
+      matrix.m22 = value
+      matrix.m33 = value
+      @matrix = matrix
+    }
+  },
+  
+  rotateBy: { # rotX, rotY, rotZ (0-360)
+    value: ^{
+      matrix = @matrix
+      @matrix = matrix.rotate.apply matrix, arguments
+    }
+  },
+  
+  rotateAxisAngleBy: { # x, y, z, angle
+    value: ^{
+      matrix = @matrix
+      @matrix = matrix.rotateAxisAngle.apply matrix, arguments
+    }
+  },
+  
+  scaleBy: { # x, y, z (0-1)
+    value: ^{
+      matrix = @matrix
+      @matrix = matrix.scale.apply matrix, arguments
+    }
+  },
+  
+  moveBy: { # x, y, z (pixels)
+    value: ^{
+      matrix = @matrix
+      @matrix = matrix.translate.apply matrix, arguments
     }
   },
   
   # Origin for transformations (e.g. scaling) in the layer's own coordinates.
-  # Defaults to {x:0, y:0}, accepts any number value (i.e. 123, "123px", "50%")
   anchorPoint: {
     get: ^{
-      point = [0.5, 0.5]
+      point = [0.5, 0.5, 0]
       if (v = @element.style.getPropertyCSSValue '-webkit-transform-origin-x')
         point[0] = v.getFloatValue(v.primitiveType)/100
       if (v = @element.style.getPropertyCSSValue '-webkit-transform-origin-y')
         point[1] = v.getFloatValue(v.primitiveType)/100
+      if (v = @element.style.getPropertyCSSValue '-webkit-transform-origin-z')
+        point[3] = v.getFloatValue(v.primitiveType)/100
       point
     },
     set: ^(origin) {
-      if (!@_is3DBacked && !@_disallow3DBacking) @_set3DBacked true
-      if (!Array.isArray origin) origin = [origin.x, origin.y]
-      if (origin[0] == 0.5 && origin[1] == 0.5) {
-        @element.style.removeProperty '-webkit-transform-origin'
+      style = @element.style
+      
+      if (origin[0] == 0.5 || origin[0] == undefined) {
+        style.removeProperty '-webkit-transform-origin-x'
       } else {
-        @element.style.setProperty('-webkit-transform-origin',
-          (100*origin[0]).toFixed(0)+'% '+(100*origin[1]).toFixed(0)+'%', null)
+        style.setProperty '-webkit-transform-origin-x', (100*origin[0]).toFixed(0)+'%', null
+      }
+      
+      if (origin[1] == 0.5 || origin[1] == undefined) {
+        style.removeProperty '-webkit-transform-origin-y'
+      } else {
+        style.setProperty '-webkit-transform-origin-y', (100*origin[1]).toFixed(0)+'%', null
+      }
+      
+      if (origin[2] == 0 || origin[2] == undefined) {
+        style.removeProperty '-webkit-transform-origin-z'
+      } else {
+        style.setProperty '-webkit-transform-origin-z', (100*origin[2]).toFixed(0)+'%', null
       }
     }
   }
@@ -385,6 +462,12 @@ UILayer.prototype.removeSublayer = ^(layer, index) {
     @emit 'uilayer:removed-sublayer', {sublayer:layer}
     return layer
   }
+}
+
+UILayer.prototype.removeFromSuperlayer = ^{
+  if (!(superlayer = @superlayer))
+    throw Error 'Not attached to any superlayer'
+  superlayer.element.removeChild @element
 }
 
 UILayer.prototype.removeAllSublayers = ^{
@@ -466,27 +549,6 @@ UILayer.prototype.toJSON = ^{
   }
   obj
 }
-  
-UILayer.prototype._set3DBacked = ^(yesplease){
-  if (yesplease && !@_disallow3DBacking) {
-    # This isn't perfect, but... yeah.
-    addClassName @element, 'textureBacked'
-    @element.style.setProperty '-webkit-transform', 'matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1)', null
-    @_is3DBacked = true
-    
-    frame = @frame
-    @frame_ = null
-    @frame = frame
-    
-    return true
-  } else {
-    removeClassName @element, 'textureBacked'
-    @element.style.removeProperty '-webkit-transform'
-    @_is3DBacked = false
-  }
-  false
-}
-
 
 
 # ---------------------------------------------------------------------------------------
@@ -669,11 +731,12 @@ Object.defineProperties UILayer.prototype, UILayer.textureBackedProperties
 
 # Add style to document
 if ((head = document.getElementsByTagName('head')).length) head = head[0]
-else head = document.body
+else head = document.body || document.documentElement
 baseStyle = document.createElement 'style'
 baseStyle.id = 'UILayer-base-style'
 baseStyle.appendChild document.createTextNode '.uilayer {'+
 '  display: block;'+
+'  visibility: visible;'+
 '  position: absolute;'+
 '  left:0; top:0; width:auto; height:auto;'+
 '  overflow: visible;'+
@@ -683,7 +746,8 @@ baseStyle.appendChild document.createTextNode '.uilayer {'+
 '  opacity:1;'+
 '}\n'+
 '.uilayer.textureBacked {'+
-'  -webkit-transform-origin: 50% 50%;'+
+'  -webkit-transform-origin: 50% 50% 0%;'+
+'  -webkit-backface-visibility: hidden;'+
 '}\n'+
 '.uilayer.animated {'+
 '  -webkit-transition-duration: 500ms;'+

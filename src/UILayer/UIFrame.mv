@@ -1,9 +1,7 @@
-import .style_ext
 
 mkCSSPixelValueProperty = ^(name, eventPropertyName, defaultValue:0) {
   return {
     enumerable: true,
-    configurable: false,
     get: ^{
       if (v = @layer.element.style.getPropertyCSSValue name) {
         if (v.primitiveType == CSSPrimitiveValue.CSS_PX)
@@ -28,59 +26,49 @@ mkCSSPixelValueProperty = ^(name, eventPropertyName, defaultValue:0) {
   }
 }
 
-
-mkCSSMatrix3DSingleProperty = ^(index, eventPropertyName, defaultValue:0) {
-  return {
-    enumerable: true,
-    configurable: false,
-    get: ^{
-      if (matrix3d = @layer.element.style.getMatrix3dTransform())
-        matrix3d[index].getFloatValue CSSPrimitiveValue.CSS_NUMBER
-      else
-        defaultValue
-    },
-    set: ^(value) {
-      if (value == undefined || value == null)
-        value = defaultValue
-      values = []
-      values[index] = value
-      @layer.element.style.setMatrix3dTransform values
-      @layer.emit 'UILayerFrameDidChange', {changedPropertyName:eventPropertyName}
-    }
-  }
-}
-
 # -----------------------
 
-props = {
-  width: mkCSSPixelValueProperty 'width', 'width', -1,
-  height: mkCSSPixelValueProperty 'height', 'height', -1,
-}
-props2D = {
-  x: mkCSSPixelValueProperty 'left', 'x',
-  y: mkCSSPixelValueProperty 'top', 'y',
-}
-props3D = {
-  x: mkCSSMatrix3DSingleProperty 12, 'x',
-  y: mkCSSMatrix3DSingleProperty 13, 'y',
-  #z: mkCSSMatrix3DSingleProperty 14,
-}
 
 // frame is an object with {x, y, width, height}
 module.exports = exports = UIFrame = class {
   constructor: ^(layer) {
-    is3D = layer.is3DBacked
-    Object.defineProperties this, {
-      layer: {value:layer},
-      width: props.width,
-      height: props.height,
-      x: is3D ? props3D.x : props2D.x,
-      y: is3D ? props3D.y : props2D.y,
-    }
+    Object.defineProperty this, 'layer', {value:layer}
   },
 
   toString: ^{
     '{x:'+@x+', y:'+@y+', width:'+@width+', height:'+@height+'}'
   }
+}
+
+Object.defineProperties UIFrame.prototype, {
+  width: mkCSSPixelValueProperty 'width', 'width', -1,
+  height: mkCSSPixelValueProperty 'height', 'height', -1,
+  
+  x: { enumerable: true,
+    get: ^{ @layer.matrix.m41 },
+    set: ^{
+      matrix = @layer.matrix
+      matrix.m41 = arguments[0]
+      @layer.matrix = matrix
+    }
+  },
+  
+  y: { enumerable: true,
+    get: ^{ @layer.matrix.m42 },
+    set: ^{
+      matrix = @layer.matrix
+      matrix.m42 = arguments[0]
+      @layer.matrix = matrix
+    }
+  },
+  
+  z: { enumerable: true,
+    get: ^{ @layer.matrix.m43 },
+    set: ^{
+      matrix = @layer.matrix
+      matrix.m43 = arguments[0]
+      @layer.matrix = matrix
+    }
+  },
 }
 

@@ -14,16 +14,16 @@ You can also build a JavaScript library from the source files (requires move >=0
     move compile -d src -o uilayer.js
 
 
-## API
+# API
 
-### `UILayer(x, y, width, height, frame, element, animated, textureBacked, style, sublayers) → layer`
+### `UILayer(x, y, z, width, height, scale, frame, element, animated, style, sublayers, ..) → layer`
 
 Create a new UILayer with optional initial properties.
 
 
-## Position and size
+## Geometry
 
-### `layer.frame ⇄ UIFrame(x:number, y:number, width:number, height:number)`
+### `layer.frame ⇄ UIFrame {x:number, y:number, z:number, width:number, height:number}`
 
 The position and size of the layer in the coordinate space of its parent layer.
 
@@ -37,11 +37,26 @@ Providing a width and/or height of 0 (zero) makes the layer span the width and/o
 Scale of the layer. Defaults to 1.0 (100%).
 
 
-### `layer.anchorPoint ⇄ [x, y]`
+### `layer.scaleBy(x, y:0, z:0)`
+
+Modify scale of the layer.
+
+
+### `layer.moveBy(x, y:0, z:0)`
+
+Modify position of the layer.
+
+
+### `layer.rotateBy(x, y:0, z:0)`
+
+Modify rotation of the layer. Degrees are expressed as [0-360].
+
+
+### `layer.anchorPoint ⇄ [x, y, z]`
 
 Defines the anchor point of the layer's bounds rectangle. Animatable.
 
-Described in the unit coordinate space. The value of this property is specified in points. Defaults to (0.5, 0.5), the center of the bounds rectangle.
+Described in the unit coordinate space. The value of this property is specified in points. Defaults to (0.5, 0.5, 0), the center of the bounds rectangle.
 
 
 ### `layer.zPosition ⇄ number`
@@ -49,7 +64,15 @@ Described in the unit coordinate space. The value of this property is specified 
 Layers with a larger zPosition will be placed in front of those with a smaller one. Defaults to 0.
 
 
-## Appearance
+## Style attributes
+
+### `layer.doubleSided ⇄ bool`
+
+Determines whether the receiver is displayed when facing away from the viewer. Defaults to false.
+
+### `layer.cornerRadius ⇄ number`
+
+Specifies a radius used to draw the rounded corners of the receiver’s background. Defaults to 0.
 
 ### `layer.backgroundColor ⇄ string`
 
@@ -64,20 +87,20 @@ Foreground (text) color of the layer. Defaults to the inherited value (from the 
 Opacity of the layer. Defaults to 1 (fully opaque).
 
 
+### `layer.hidden ⇄ bool`
+
+Hide or show the layer. Defaults to false.
+
+A hidden view disappears from its window and does not receive input events. It remains in its superview’s list of sublayers, however, and participates in autoresizing as usual. Hiding a view with sublayers has the effect of hiding those sublayers and any view descendants they might have. This effect is implicit and does not alter the hidden state of the receiver’s descendants.
+
+
 ### `layer.computedStyle → Style`
 
 Returns a style object defining the layers computed style (equivalent to `window.computedStyle` for an element).
 
 ### `layer.style ⇄ Style`
 
-The explicit style of the layer.
-
-
-### `layer.hidden ⇄ bool`
-
-Hide or show the layer. Defaults to false.
-
-A hidden view disappears from its window and does not receive input events. It remains in its superview’s list of sublayers, however, and participates in autoresizing as usual. Hiding a view with sublayers has the effect of hiding those sublayers and any view descendants they might have. This effect is implicit and does not alter the hidden state of the receiver’s descendants.
+The explicit (CSS) style of the layer.
 
 
 ### `layer.masksToBounds ⇄ bool`
@@ -93,11 +116,11 @@ Setting this value to true causes sublayers to be clipped to the bounds of the r
 
 Animate property changes. Defaults to false.
 
-The value `true` indicates all properties should be animated. A string value signifies only a subset of properties should be animated. UILayer defines a few helpful symbols:
+The value `true` indicates all properties should be animated. A string value signifies only a subset of properties should be animated. For instance:
 
-- UILayer.ANIMATE_ALL -- animate all properties. Equivalent to `true`
-- UILayer.ANIMATE_TRANSFORM -- animate changes to `layer.frame` and `layer.scale`
-- UILayer.ANIMATE_OPACITY -- animate changes to opacity
+- "all" -- animate all properties. Equivalent to `true`
+- "geometry" -- animate changes to geometry
+- "opacity" -- animate changes to opacity
 
 You can define a list of CSS properties to be animated by separating them with a comma. E.g. a value of `"width, height, opacity"` would cause frame size and opacity to be animated, but not scale, position, etc.
 
@@ -174,6 +197,11 @@ Remove a sublayer by reference or index. Returns the sublayer removed or undefin
 Remove all sublayers. Returns the layers that was removed.
 
 
+### `layer.removeFromSuperlayer()`
+
+Removes the layer from the superlayer.
+
+
 ### `layer.isSublayerOf(layer:superlayer) → bool`
 
 Test if a layer is a sublayer of another layer.
@@ -184,7 +212,7 @@ Test if a layer is a sublayer of another layer.
 
 ### `layer.element → HTMLElement`
 
-A DOM node which is used to represent this layer in the document. Can be assigned during creation, but not later.
+The DOM node which is used to represent the layer in the document. Can be assigned during creation, but not later.
 
 
 
@@ -217,16 +245,10 @@ Example:
 
 ## Performance and edge-cases
 
-### `layer.allow3DBacking ⇄ bool`
-
-By setting this property to `false`, the layer will not automatically become 3D-backed (composed of textures and thus graphics-hardware accelerated). 3D-backed layers use more memory than 2D-backed (plain) layers.
-
-A UILayer will by default become 3D-backed when animated or scaled. Scaling of 2D-backed layers is unsupported and animation of 2D-backed layers will be less performant than that of 3D-backed layers.
-
 
 ### `layer.is3DBacked → bool`
 
-Indicates whether the layer is 3D-backed or not.
+Indicates whether the layer is backed by high-performance 3D rendering or not.
 
 
 ## Identifying the layer at runtime

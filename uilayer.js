@@ -8,55 +8,15 @@ Move.require.define("UILayer","UILayer/index.mv",function(require,module,exports
   module.exports = exports = require("./UILayer");
   exports.version = version = "0.0.2";
 });
-Move.require.define("UILayer/style_ext","UILayer/style_ext.mv",function(require,module,exports){
-  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML;
-  M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
-  EHTML = Move.EHTML;
-  CSSStyleDeclaration.prototype.setMatrix3dTransform = function setMatrix3dTransform(values) {
-    values !== null && typeof values === "object" && values.__kw === _MoveKWArgsT && (arguments.keywords = values, values = values.values);
-    var matrix3d, identityMatrix, v2, i, v, value;
-    if (!(matrix3d = this.getMatrix3dTransform())) identityMatrix = [ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ];
-    if (values && values instanceof WebKitCSSTransformValue) {
-      if (values.operationType !== WebKitCSSTransformValue.CSS_MATRIX3D) throw TypeError("First argument is not a valid 3D matrix");
-      v2 = [];
-      for (i = 0; i < values.length; ++i) v2[i] = values[i].getFloatValue(CSSPrimitiveValue.CSS_NUMBER);
-      values = v2;
-    }
-    v = [];
-    for (i = 0; i < matrix3d.length; ++i) {
-      if ((value = values[i]) === undefined) {
-        if (matrix3d) v[i] = matrix3d[i].getFloatValue(CSSPrimitiveValue.CSS_NUMBER); else v[i] = identityMatrix[i];
-      } else {
-        v[i] = value;
-      }
-    }
-    this._matrix3d = null;
-    return this.setProperty("-webkit-transform", "matrix3d(" + v.join(",") + ")");
-  };
-  return CSSStyleDeclaration.prototype.getMatrix3dTransform = function getMatrix3dTransform() {
-    var pv, i, v;
-    if (this._matrix3d) return this._matrix3d;
-    pv = this.getPropertyCSSValue("-webkit-transform");
-    if (pv) for (i = 0; i < pv.length; ++i) {
-      v = pv[i];
-      if (v && v instanceof WebKitCSSTransformValue && v.operationType === WebKitCSSTransformValue.CSS_MATRIX3D) {
-        this._matrix3d = v;
-        return v;
-      }
-    }
-  };
-});
 Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,module,exports){
-  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, style_ext, mkCSSPixelValueProperty, mkCSSMatrix3DSingleProperty, props, props2D, props3D, UIFrame;
+  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, mkCSSPixelValueProperty, UIFrame;
   M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
   EHTML = Move.EHTML;
-  style_ext = require("./style_ext");
   mkCSSPixelValueProperty = function mkCSSPixelValueProperty(name, eventPropertyName, defaultValue) {
     name !== null && typeof name === "object" && name.__kw === _MoveKWArgsT && (arguments.keywords = name, defaultValue = name.defaultValue, eventPropertyName = name.eventPropertyName, name = name.name);
     if (defaultValue === undefined) defaultValue = 0;
     return {
       enumerable: true,
-      configurable: false,
       get: function () {
         var v;
         if (v = this.layer.element.style.getPropertyCSSValue(name)) {
@@ -77,60 +37,57 @@ Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,modu
       }
     };
   };
-  mkCSSMatrix3DSingleProperty = function mkCSSMatrix3DSingleProperty(index, eventPropertyName, defaultValue) {
-    index !== null && typeof index === "object" && index.__kw === _MoveKWArgsT && (arguments.keywords = index, defaultValue = index.defaultValue, eventPropertyName = index.eventPropertyName, index = index.index);
-    if (defaultValue === undefined) defaultValue = 0;
-    return {
-      enumerable: true,
-      configurable: false,
-      get: function () {
-        var matrix3d;
-        if (matrix3d = this.layer.element.style.getMatrix3dTransform()) return matrix3d[index].getFloatValue(CSSPrimitiveValue.CSS_NUMBER); else return defaultValue;
-      },
-      set: function (value) {
-        value !== null && typeof value === "object" && value.__kw === _MoveKWArgsT && (arguments.keywords = value, value = value.value);
-        var values;
-        if (value === undefined || value === null) value = defaultValue;
-        values = [];
-        values[index] = value;
-        this.layer.element.style.setMatrix3dTransform(values);
-        return this.layer.emit("UILayerFrameDidChange", {
-          changedPropertyName: eventPropertyName
-        });
-      }
-    };
-  };
-  props = {
-    width: mkCSSPixelValueProperty("width", "width", -1),
-    height: mkCSSPixelValueProperty("height", "height", -1)
-  };
-  props2D = {
-    x: mkCSSPixelValueProperty("left", "x"),
-    y: mkCSSPixelValueProperty("top", "y")
-  };
-  props3D = {
-    x: mkCSSMatrix3DSingleProperty(12, "x"),
-    y: mkCSSMatrix3DSingleProperty(13, "y")
-  };
-  return module.exports = exports = UIFrame = __class(UIFrame = function UIFrame() {
+  module.exports = exports = UIFrame = __class(UIFrame = function UIFrame() {
     return __class.create(UIFrame, arguments);
   }, {
     constructor: function (layer) {
       layer !== null && typeof layer === "object" && layer.__kw === _MoveKWArgsT && (arguments.keywords = layer, layer = layer.layer);
-      var is3D;
-      is3D = layer.is3DBacked;
-      return Object.defineProperties(this, {
-        layer: {
-          value: layer
-        },
-        width: props.width,
-        height: props.height,
-        x: is3D ? props3D.x : props2D.x,
-        y: is3D ? props3D.y : props2D.y
+      return Object.defineProperty(this, "layer", {
+        value: layer
       });
     },
     toString: function () {
       return "{x:" + this.x + ", y:" + this.y + ", width:" + this.width + ", height:" + this.height + "}";
+    }
+  });
+  return Object.defineProperties(UIFrame.prototype, {
+    width: mkCSSPixelValueProperty("width", "width", -1),
+    height: mkCSSPixelValueProperty("height", "height", -1),
+    x: {
+      enumerable: true,
+      get: function () {
+        return this.layer.matrix.m41;
+      },
+      set: function () {
+        var matrix;
+        matrix = this.layer.matrix;
+        matrix.m41 = arguments[0];
+        return this.layer.matrix = matrix;
+      }
+    },
+    y: {
+      enumerable: true,
+      get: function () {
+        return this.layer.matrix.m42;
+      },
+      set: function () {
+        var matrix;
+        matrix = this.layer.matrix;
+        matrix.m42 = arguments[0];
+        return this.layer.matrix = matrix;
+      }
+    },
+    z: {
+      enumerable: true,
+      get: function () {
+        return this.layer.matrix.m43;
+      },
+      set: function () {
+        var matrix;
+        matrix = this.layer.matrix;
+        matrix.m43 = arguments[0];
+        return this.layer.matrix = matrix;
+      }
     }
   });
 });
@@ -207,7 +164,8 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
         x: 1,
         y: 1,
         width: 1,
-        height: 1
+        height: 1,
+        className: 1
       };
       kwargs = typeof arguments[0] === "object" ? arguments[0] : arguments.keywords || {};
       element = kwargs.element;
@@ -216,11 +174,15 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
       kwargs.element = undefined;
       addClassName(element, "uilayer");
       if (this.className) addClassName(element, this.className);
+      if (kwargs.className) addClassName(element, kwargs.className);
       Object.defineProperties(this, {
         element: {
           value: element
         }
       });
+      addClassName(this.element, "textureBacked");
+      element.style.setProperty("-webkit-transform", "matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1)", null);
+      this._is3DBacked = true;
       if (kwargs.x !== undefined) this.frame.x = kwargs.x;
       if (kwargs.y !== undefined) this.frame.y = kwargs.y;
       if (kwargs.width !== undefined) this.frame.width = kwargs.width;
@@ -230,17 +192,6 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
         key !== null && typeof key === "object" && key.__kw === _MoveKWArgsT && (arguments.keywords = key, value = key.value, key = key.key);
         if (value !== undefined && value !== _MoveKWArgsT && !(key in specialProperties)) return this[key] = value;
       }, this);
-    }
-  });
-  Object.defineProperties(UILayer, {
-    ANIMATE_ALL: {
-      value: "all"
-    },
-    ANIMATE_TRANSFORM: {
-      value: "-webkit-transform,width,height,left,top"
-    },
-    ANIMATE_OPACITY: {
-      value: "opacity"
     }
   });
   UILayer.layersInElement = function layersInElement(element) {
@@ -275,16 +226,7 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   UILayer.properties = {
     is3DBacked: {
       get: function () {
-        return this._is3DBacked;
-      }
-    },
-    allow3DBacking: {
-      get: function () {
-        return !this._disallow3DBacking;
-      },
-      set: function (allow) {
-        allow !== null && typeof allow === "object" && allow.__kw === _MoveKWArgsT && (arguments.keywords = allow, allow = allow.allow);
-        if (allow) return delete this._disallow3DBacking; else return this._disallow3DBacking = true;
+        return !!this._is3DBacked;
       }
     },
     sublayers: {
@@ -387,6 +329,33 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
         });
       }
     },
+    doubleSided: {
+      get: function () {
+        return this.element.style.webkitBackfaceVisibility === "visible";
+      },
+      set: function (doubleSided) {
+        doubleSided !== null && typeof doubleSided === "object" && doubleSided.__kw === _MoveKWArgsT && (arguments.keywords = doubleSided, doubleSided = doubleSided.doubleSided);
+        if (doubleSided) {
+          return this.element.style.setProperty("-webkit-backface-visibility", "visible", null);
+        } else {
+          return this.element.style.removeProperty("-webkit-backface-visibility");
+        }
+      }
+    },
+    cornerRadius: {
+      get: function () {
+        var v;
+        return (v = this.computedStyle.getPropertyCSSValue("-webkit-border-top-left-radius")) && v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 0;
+      },
+      set: function (value) {
+        value !== null && typeof value === "object" && value.__kw === _MoveKWArgsT && (arguments.keywords = value, value = value.value);
+        if (value && (value = Number(value))) {
+          return this.element.style.webkitBorderRadius = value.toFixed(0) + "px";
+        } else {
+          return this.element.style.webkitBorderRadius = null;
+        }
+      }
+    },
     backgroundColor: {
       get: function () {
         var color;
@@ -411,11 +380,11 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
     },
     hidden: {
       get: function () {
-        return this.computedStyle.display === "none";
+        return this.computedStyle.visibility === "hidden";
       },
       set: function (hidden) {
         hidden !== null && typeof hidden === "object" && hidden.__kw === _MoveKWArgsT && (arguments.keywords = hidden, hidden = hidden.hidden);
-        return this.computedStyle.display = hidden ? "none" : null;
+        return this.computedStyle.visibility = hidden ? "hidden" : null;
       }
     },
     masksToBounds: {
@@ -454,10 +423,17 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
       },
       set: function (animated) {
         animated !== null && typeof animated === "object" && animated.__kw === _MoveKWArgsT && (arguments.keywords = animated, animated = animated.animated);
-        if (animated && animated !== UILayer.ANIMATE_NONE) {
-          if (!this._is3DBacked && !this._disallow3DBacking) this._set3DBacked(true);
+        if (animated && animated !== "none") {
           addClassName(this.element, "animated");
-          if (typeof animated !== "string") animated = UILayer.ANIMATE_ALL; else if (Array.isArray(animated)) animated = animated.join(",");
+          if (animated === "geometry") {
+            animated = "-webkit-transform,width,height";
+          } else if (animated === "transform") {
+            animated = "-webkit-transform";
+          } else if (Array.isArray(animated)) {
+            animated = animated.join(",");
+          } else if (typeof animated !== "string") {
+            animated = "all";
+          }
           return this.element.style.setProperty("-webkit-transition-property", animated, null);
         } else if (hasClassName(this.element, "animated")) {
           removeClassName(this.element, "animated");
@@ -502,38 +478,91 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
     }
   };
   UILayer.textureBackedProperties = {
+    matrix: {
+      get: function () {
+        return this._matrix || (this._matrix = new WebKitCSSMatrix(this.element.style.webkitTransform));
+      },
+      set: function () {
+        M = this._matrix = arguments[0];
+        if (!M || !(M instanceof WebKitCSSMatrix)) {
+          this._matrix = null;
+          return this.element.style.webkitTransform = null;
+        } else {
+          return this.element.style.webkitTransform = "matrix3d(" + M.m11 + "," + M.m12 + "," + M.m13 + "," + M.m14 + "," + M.m21 + "," + M.m22 + "," + M.m23 + "," + M.m24 + "," + M.m31 + "," + M.m32 + "," + M.m33 + "," + M.m34 + "," + M.m41 + "," + M.m42 + "," + M.m43 + "," + M.m44 + ")";
+        }
+      }
+    },
     scale: {
       get: function () {
-        var matrix3d;
-        return (matrix3d = this.element.style.getMatrix3dTransform()) && matrix3d[0].getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 1;
+        return this.matrix.m11;
       },
       set: function (value) {
         value !== null && typeof value === "object" && value.__kw === _MoveKWArgsT && (arguments.keywords = value, value = value.value);
+        var matrix;
         if (value === undefined || value === null) value = 1; else if (typeof value !== "number") value = Number(value);
         if (value <= 0) throw TypeError("scale must be larger than zero");
-        if (!this._is3DBacked && !this._disallow3DBacking && !this._set3DBacked(true)) return;
-        return this.element.style.setMatrix3dTransform({
-          0: value,
-          5: value
-        });
+        matrix = this.matrix;
+        matrix.m11 = value;
+        matrix.m22 = value;
+        matrix.m33 = value;
+        return this.matrix = matrix;
+      }
+    },
+    rotateBy: {
+      value: function () {
+        var matrix;
+        matrix = this.matrix;
+        return this.matrix = matrix.rotate.apply(matrix, arguments);
+      }
+    },
+    rotateAxisAngleBy: {
+      value: function () {
+        var matrix;
+        matrix = this.matrix;
+        return this.matrix = matrix.rotateAxisAngle.apply(matrix, arguments);
+      }
+    },
+    scaleBy: {
+      value: function () {
+        var matrix;
+        matrix = this.matrix;
+        return this.matrix = matrix.scale.apply(matrix, arguments);
+      }
+    },
+    moveBy: {
+      value: function () {
+        var matrix;
+        matrix = this.matrix;
+        return this.matrix = matrix.translate.apply(matrix, arguments);
       }
     },
     anchorPoint: {
       get: function () {
         var point, v;
-        point = [ .5, .5 ];
+        point = [ .5, .5, 0 ];
         if (v = this.element.style.getPropertyCSSValue("-webkit-transform-origin-x")) point[0] = v.getFloatValue(v.primitiveType) / 100;
         if (v = this.element.style.getPropertyCSSValue("-webkit-transform-origin-y")) point[1] = v.getFloatValue(v.primitiveType) / 100;
+        if (v = this.element.style.getPropertyCSSValue("-webkit-transform-origin-z")) point[3] = v.getFloatValue(v.primitiveType) / 100;
         return point;
       },
       set: function (origin) {
         origin !== null && typeof origin === "object" && origin.__kw === _MoveKWArgsT && (arguments.keywords = origin, origin = origin.origin);
-        if (!this._is3DBacked && !this._disallow3DBacking) this._set3DBacked(true);
-        if (!Array.isArray(origin)) origin = [ origin.x, origin.y ];
-        if (origin[0] === .5 && origin[1] === .5) {
-          return this.element.style.removeProperty("-webkit-transform-origin");
+        var style;
+        style = this.element.style;
+        if (origin[0] === .5 || origin[0] === undefined) {
+          style.removeProperty("-webkit-transform-origin-x");
         } else {
-          return this.element.style.setProperty("-webkit-transform-origin", (100 * origin[0]).toFixed(0) + "% " + (100 * origin[1]).toFixed(0) + "%", null);
+          style.setProperty("-webkit-transform-origin-x", (100 * origin[0]).toFixed(0) + "%", null);
+        }
+        if (origin[1] === .5 || origin[1] === undefined) {
+          style.removeProperty("-webkit-transform-origin-y");
+        } else {
+          style.setProperty("-webkit-transform-origin-y", (100 * origin[1]).toFixed(0) + "%", null);
+        }
+        if (origin[2] === 0 || origin[2] === undefined) {
+          return style.removeProperty("-webkit-transform-origin-z");
+        } else {
+          return style.setProperty("-webkit-transform-origin-z", (100 * origin[2]).toFixed(0) + "%", null);
         }
       }
     }
@@ -589,6 +618,11 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
       });
       return layer;
     }
+  };
+  UILayer.prototype.removeFromSuperlayer = function removeFromSuperlayer() {
+    var superlayer;
+    if (!(superlayer = this.superlayer)) throw Error("Not attached to any superlayer");
+    return superlayer.element.removeChild(this.element);
   };
   UILayer.prototype.removeAllSublayers = function removeAllSublayers() {
     var removedSublayers, cn, i, el;
@@ -671,24 +705,6 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
       obj.animationTimingFunction = this.animationTimingFunction;
     }
     return obj;
-  };
-  UILayer.prototype._set3DBacked = function _set3DBacked(yesplease) {
-    yesplease !== null && typeof yesplease === "object" && yesplease.__kw === _MoveKWArgsT && (arguments.keywords = yesplease, yesplease = yesplease.yesplease);
-    var frame;
-    if (yesplease && !this._disallow3DBacking) {
-      addClassName(this.element, "textureBacked");
-      this.element.style.setProperty("-webkit-transform", "matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1)", null);
-      this._is3DBacked = true;
-      frame = this.frame;
-      this.frame_ = null;
-      this.frame = frame;
-      return true;
-    } else {
-      removeClassName(this.element, "textureBacked");
-      this.element.style.removeProperty("-webkit-transform");
-      this._is3DBacked = false;
-    }
-    return false;
   };
   isTouchDevice = false;
   if ("ontouchstart" in window && "ontouchend" in document) try {
@@ -860,9 +876,9 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   };
   Object.defineProperties(UILayer.prototype, UILayer.properties);
   Object.defineProperties(UILayer.prototype, UILayer.textureBackedProperties);
-  if ((head = document.getElementsByTagName("head")).length) head = head[0]; else head = document.body;
+  if ((head = document.getElementsByTagName("head")).length) head = head[0]; else head = document.body || document.documentElement;
   baseStyle = document.createElement("style");
   baseStyle.id = "UILayer-base-style";
-  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  position: absolute;" + "  left:0; top:0; width:auto; height:auto;" + "  overflow: visible;" + "  -webkit-user-select:none;" + "  -webkit-text-size-adjust:none;" + "  z-index:0;" + "  opacity:1;" + "}\n" + ".uilayer.textureBacked {" + "  -webkit-transform-origin: 50% 50%;" + "}\n" + ".uilayer.animated {" + "  -webkit-transition-duration: 500ms;" + "  -webkit-transition-timing-function: ease;" + "  -webkit-transition-delay: 0;" + "  -webkit-transition-property: none;" + "}"));
+  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  visibility: visible;" + "  position: absolute;" + "  left:0; top:0; width:auto; height:auto;" + "  overflow: visible;" + "  -webkit-user-select:none;" + "  -webkit-text-size-adjust:none;" + "  z-index:0;" + "  opacity:1;" + "}\n" + ".uilayer.textureBacked {" + "  -webkit-transform-origin: 50% 50% 0%;" + "  -webkit-backface-visibility: hidden;" + "}\n" + ".uilayer.animated {" + "  -webkit-transition-duration: 500ms;" + "  -webkit-transition-timing-function: ease;" + "  -webkit-transition-delay: 0;" + "  -webkit-transition-property: none;" + "}"));
   return head.appendChild(baseStyle);
 });

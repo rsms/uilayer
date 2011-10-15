@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=640,initial-scale=0.5,user-scalable=no">
+    <script src="http://movelang.org/move.js"></script>
+    <script src="../uilayer.js"></script>
+    <script type="text/move">
+
+import UILayer
+UILayer.debug = true
+
+rootLayer = UILayer { x:window.innerWidth-310, y:50, width:1, height:500, animated:'transform' }
+document.body.appendChild rootLayer.element
+
+rootLayer.style.webkitPerspective = 1000
+spacingBetweenPages = 3
+
+addPageAfterPage = ^(previousPage) {
+  superlayer = previousPage || rootLayer
+  page = superlayer.addSublayer UILayer { x:0, y:0, width:300, animated:true, className:'page' }
+  page.anchorPoint = [0,0]
+  page.style.webkitPerspective = superlayer.style.webkitPerspective
+  
+  pageNumber = 1
+  
+  if (previousPage) {
+    page.frame.x = previousPage.frame.width + spacingBetweenPages
+    page.rotateBy 0, 94
+    after {delay:1} ^{
+      rootLayer.frame.x -= page.frame.width + spacingBetweenPages
+      page.rotateBy 0, -94
+    }
+    _page = previousPage
+    ++pageNumber
+    while (_page = _page.previousPage) { ++pageNumber }
+  }
+  
+  page.element.innerText = 'Page '+pageNumber
+  page.backgroundColor = 'rgba(255,255,255,0.9)'
+  
+  page.on 'touchend', onClickPage
+  page
+}
+
+onClickPage = ^(ev) {
+  ev.stopPropagation()
+  if (@nextPage) {
+    _page = this
+    lastPage = null
+    rootLayerXDelta = 0
+    
+    while (_page = _page.nextPage) { (^(page){
+      rootLayerXDelta += page.frame.width + spacingBetweenPages
+      page.previousPage = null
+      if (lastPage)
+        lastPage.nextPage = null
+      lastPage = page
+    })(_page)}
+    
+    rootLayer.frame.x += rootLayerXDelta
+    
+    nextPage = @nextPage
+    nextPage.rotateBy 0, 94
+    after {delay:nextPage.animationDuration} ^{
+      nextPage.removeFromSuperlayer()
+    }
+    @nextPage = null
+  } else {
+    @nextPage = addPageAfterPage this
+    @nextPage.previousPage = this
+  }
+}
+
+addPageAfterPage null
+
+    </script>
+    <style>
+      * { margin:0; padding:0; border:none; }
+      html {
+        background: black url(checker-pattern.png) repeat scroll top left;
+      }
+      body { position:absolute; top:0; right:0; bottom:0; left:0; overflow:hidden; }
+      .page {
+        color: #020202;
+        text-align: center;
+        font: normal normal bold 40px/400px helvetica, sans-serif;
+      }
+    </style>
+  </head>
+  <body></body>
+</html>
