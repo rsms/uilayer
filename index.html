@@ -3,8 +3,18 @@
   <head>
     <meta charset="utf-8">
     <title>UILayer</title>
+    <meta property="fb:admins" content="728642302">
+    <meta name="description" content="API on top of the WebKit DOM for working with the concept of layers. High performance UI rendering and animation.">
+    <meta property="og:image" content="http://rsms.me/uilayer/examples/icon.png">
+    <meta property="og:site_name" content="rsms.me">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+    <script src="http://movelang.org/move-0.4.4.js"></script>
     <script>
+window.gFetchTS = new Date;
+gFetchTS = gFetchTS.getFullYear()+'-'+gFetchTS.getMonth()+'-'+gFetchTS.getDate()+'-'+gFetchTS.getHours();
+
+document.write('<'+'script src="uilayer.js?'+gFetchTS+'"><'+'/script>');
+
 var Showdown = {converter:function() {
   function n(a, b) {
     var b = o(b), c = "<h" + a;
@@ -389,7 +399,7 @@ div.footnotes { background: #F0F0F0; }
   </head>
   <body>
 <a href="http://github.com/rsms/uilayer"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://a248.e.akamai.net/assets.github.com/img/e6bef7a091f5f3138b8cd40bc3e114258dd68ddf/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub"></a>
-    <h1>UILayer</h1>
+    <h1 id="title-h1">UILayer</h1>
     <div id="content">
     </div>
     <script>
@@ -397,13 +407,11 @@ var content = document.getElementById('content');
 var loadingTimer = setTimeout(function (){
   content.innerHTML = '<p>Loading...</p>'
 }, 1000);
-var ts = new Date;
-ts = ts.getFullYear()+'-'+ts.getMonth()+'-'+ts.getDate()+'-'+ts.getHours();
 
 // Synchronous request so that back/fwd in browsers retain scroll position, etc
 $.ajax({
   async: false,
-  url: 'README.md?'+ts,
+  url: 'README.md?'+gFetchTS,
   success: function (body) {
     clearTimeout(loadingTimer);
     var html = (new Showdown.converter()).makeHtml(body);
@@ -417,6 +425,61 @@ $.ajax({
     }
   }
 });
-    </script>
+</script>
+<style type="text/css" media="screen">
+#logo {
+  cursor: default;
+}
+#logo div {
+  font: bold 50px/70px helvetica, arial, sans-serif;
+  text-align:center;
+}
+</style>
+<script type="text/move">
+
+// Logotype
+import UILayer
+if (!UILayer) return;
+
+UILayer.debug = true;
+rootLayer = UILayer { x:20, y:20, width:2, height:70, tag:'logo', backgroundColor:'transparent' }
+document.body.appendChild rootLayer.element
+
+addLetter = ^(letter, width, previousLayer) {
+  layer = (previousLayer || rootLayer).addSublayer UILayer {
+    x: 0, y: 0,
+    width: width || 60,
+    element: <div>{letter}</div>,
+    animated: 'geometry',
+  }
+  
+  if (previousLayer) {
+    layer.animationTimingFunction = 'ease-out'
+    after {delay:1} ^{
+      layer.frame.x = previousLayer.frame.width - 10
+      after {delay:layer.animationDuration} ^{
+        layer.animationTimingFunction = 'ease'
+        layer.animationDuration = 200
+      }
+    }
+  } else {
+    layer.animationTimingFunction = 'ease'
+    layer.animationDuration = 200
+  }
+  
+  layer.on 'touchstart', ^(ev) {
+    @rotateBy((Math.random()*20)-10, (Math.random()*20)-10, (Math.random()*20)-10)
+    @moveBy((Math.random()*10)-5, (Math.random()*10)-5, (Math.random()*10)-5)
+    #@scale *= (0.9 + (Math.random()*0.2))
+    ev.stopPropagation()
+  }
+  
+  ^(letter, width) { addLetter letter, width, layer }
+}
+
+addLetter('U', 45)('I', 35)('L', 40)('A', 48)('Y', 40)('E')('R', 40)
+document.getElementById('title-h1').style.visibility = 'hidden'
+
+</script>
   </body>
 </html>
