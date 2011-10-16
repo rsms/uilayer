@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=640,initial-scale=0.5,user-scalable=no">
+    <script src="http://movelang.org/move-0.4.4.js"></script>
+    <script>document.write('<'+'script src="../uilayer.js?'+(+new Date)+'"><'+'/script>');</script>
+    <script type="text/move">
+
+import UILayer
+UILayer.debug = true
+
+HitOKLayer = ^(x, y){
+  UILayer { x:x-1, y:y-1,
+            width:3, height:3,
+            cornerRadius:2, backgroundColor:'white',
+            excludedFromHitTesting: true }
+}
+
+rootLayer = UILayer { x:50, y:50, width: 500, height: 500, tag: 'root' }
+layer1 = rootLayer.addSublayer UILayer { x:100, y:100, width:300, height:300, cornerRadius:10, tag: 'layer1' }
+
+document.body.style.overflow = 'hidden'
+document.body.appendChild rootLayer.element
+
+testHit = ^(x, y, expectedReturnValue) {
+  layer = UILayer.hitTest x, y
+  if (!(ok = layer == expectedReturnValue))
+    document.body.appendChild(<p>Fail: unexpected return value for coordinate {x},{y}</p>)
+  print ((ok ? 'OK' : 'FAIL'), x+','+y, layer ? layer.tag : layer,
+    expectedReturnValue ? expectedReturnValue.tag : expectedReturnValue)
+  document.body.appendChild HitOKLayer(x, y).element
+}
+
+testHit 20, 20, undefined
+testHit 90000, 90000, undefined
+testHit 100, 100, rootLayer
+testHit 149, 149, rootLayer
+testHit 150, 150, layer1
+testHit 170, 170, layer1
+
+# Add a non-UILayer element, spanning layer1
+layer1.element.appendChild(<div style="position:absolute;top:10px;right:10px;bottom:10px;left:10px;background:rgba(255,0,0,0.4);"></div>)
+
+# Make sure a hit on a child element of a UILayer properly returns that UILayer
+testHit 170, 170, layer1
+
+# Next, test hit testing layers that move. We use a linear animation so that
+# at 50% animation progress the locations should be 50% away from its target.
+after {delay:200} ^{
+  rootLayer.animated = true
+  rootLayer.animationDuration = 1000
+  rootLayer.animationTimingFunction = 'linear'
+  rootLayer.frame.x += 100
+  after {delay:500} ^{
+    testHit 150, 100, rootLayer
+    testHit 199, 149, rootLayer
+    testHit 200, 150, layer1
+    testHit 220, 170, layer1
+  }
+  after {delay:1000} ^{
+    testHit 200, 100, rootLayer
+    testHit 249, 149, rootLayer
+    testHit 250, 150, layer1
+    testHit 270, 170, layer1
+  }
+}
+
+    </script>
+    <style>
+      * { margin:0; padding:0; border:none; }
+      html {
+        background: black url(checker-pattern.png) repeat scroll top left;
+        color: white;
+        font-family: "Helvetica";
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body></body>
+</html>
