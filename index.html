@@ -404,14 +404,16 @@ div.footnotes { background: #F0F0F0; }
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
     <script>
+var content = document.getElementById('content');
 // Synchronous request so that back/fwd in browsers retain scroll position, etc
 $.ajax({
   async: false,
   url: 'README.md?'+gFetchTS,
+  error: function (a,b,c) {
+    console.error('Failed to load content:', a,b,c);
+  },
   success: function (body) {
-    clearTimeout(loadingTimer);
     var html = (new Showdown.converter()).makeHtml(body);
-    var content = document.getElementById('content');
     content.innerHTML = html.replace(/<h1[^>]+>.+<\/h1>/, '');
   
     if (typeof content.querySelectorAll === 'function') {
