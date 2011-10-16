@@ -83,6 +83,8 @@ Determines whether the receiver is displayed when facing away from the viewer. D
 
 Specifies a radius used to draw the rounded corners of the receiver’s background. Defaults to 0.
 
+Note: cornerRadius does not affect hit testing.
+
 ### `layer.backgroundColor ⇄ string`
 
 The background color of the layer. Defaults to "transparent" (no background color).
@@ -215,6 +217,16 @@ Removes the layer from the superlayer.
 
 Test if a layer is a sublayer of another layer.
 
+
+## Hit testing
+
+### `UILayer.hitTest(x, y) → layer`
+
+Returns the farthest descendant of the layer hierarchy that contains a specified point.
+
+### `layer.excludedFromHitTesting ⇄ bool`
+
+Controls whether the layer is included in hit testing. Defaults to true. Setting this to false causes the layer to stop accepting user input -- such as touches and clicks -- and also being ignored by `UILayer.hitTest`.
 
 
 ## DOM

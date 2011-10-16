@@ -177,7 +177,7 @@ UILayer.properties = {
   
   # -------------------------------------------------------------------------------------------
   # Style Attributes
-  
+
   computedStyle: {
     get: ^{ window.getComputedStyle @element }
   },
@@ -249,6 +249,9 @@ UILayer.properties = {
     set: ^(value) { @element.style.zIndex = Number(value).toFixed 0 },
   },
   
+  # -------------------------------------------------------------------------------------------
+  # Animation
+  
   animated: {
     get: ^{
       if (!hasClassName @element, 'animated')
@@ -303,10 +306,44 @@ UILayer.properties = {
     }
   },
   
+  # -------------------------------------------------------------------------------------------
+  # Identification
+  
   tag: {
     get: ^{ @element.id },
     set: ^(tag) { @element.id = Text tag },
   },
+  
+  excludedFromHitTesting: {
+    get: ^{
+      @element.style.getPropertyValue('pointer-events') == 'none'
+    },
+    set: ^(isExcluded) {
+      if (isExcluded) @element.style.setProperty 'pointer-events', 'none', null
+      else @element.style.removeProperty 'pointer-events'
+    },
+  },
+}
+
+
+# -------------------------------------------------------------------------------------------
+# Hit testing
+
+UILayer.hitTest = ^(x, y) {
+  if ((element = document.elementFromPoint x, y)) {
+    # Find closest parent element that is controlled by a UILayer (including the target element)
+    
+    # Implementation note: We do "el != element && ..." as an optimization. Any layer which have
+    # its excludedFromHitTesting set to true will never be returned by document.elementFromPoint,
+    # thus we only need to check excludedFromHitTesting for parent elements.
+    
+    el = element
+    while (!(UILayer.prototype.isPrototypeOf el.UILayer) || (el != element && el.UILayer.excludedFromHitTesting)) {
+      if (!(el = el.parentNode))
+        return
+    }
+    return el.UILayer
+  }
 }
 
 
