@@ -7,7 +7,7 @@ Move.require.define("UILayer","UILayer/index.mv",function(require,module,exports
     return print("Error: UILayer is only compatible with WebKit");
   }
   module.exports = exports = require("./UILayer");
-  exports.version = version = "0.0.2";
+  exports.version = version = "0.0.3";
 });
 Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,module,exports){
   var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, mkCSSPixelValueProperty, UIFrame;
