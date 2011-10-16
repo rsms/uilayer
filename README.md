@@ -66,6 +66,8 @@ Defines the anchor point of the layer's bounds rectangle. Animatable.
 
 Described in the unit coordinate space. The value of this property is specified in points. Defaults to (0.5, 0.5, 0), the center of the bounds rectangle.
 
+Example: [examples/anchorPoint.html](http://rsms.me/uilayer/examples/anchorPoint.html)
+
 
 ### layer.zPosition ⇄ number
 
@@ -73,6 +75,12 @@ Layers with a larger zPosition will be placed in front of those with a smaller o
 
 
 ## Style attributes
+
+### UILayer.debug ⇄ bool
+
+If set to true, new layers will be assigned a random semi-opaque background color, aiding in development. Defaults to false.
+
+Example: [examples/debug.html](http://rsms.me/uilayer/examples/debug.html)
 
 ### layer.doubleSided ⇄ bool
 
@@ -103,6 +111,7 @@ Hide or show the layer. Defaults to false.
 
 A hidden view disappears from its window and does not receive input events. It remains in its superview’s list of sublayers, however, and participates in autoresizing as usual. Hiding a view with sublayers has the effect of hiding those sublayers and any view descendants they might have. This effect is implicit and does not alter the hidden state of the receiver’s descendants.
 
+If you want to know if a layer is in a DOM tree (no matter if it's visible), see [`layer.document`](http://rsms.me/uilayer/#layer.document-htmldocument).
 
 ### layer.computedStyle → Style
 
@@ -118,6 +127,8 @@ The explicit (CSS) style of the layer.
 Determines whether sublayers are confined to the bounds of the receiver. Defaults to false.
 
 Setting this value to true causes sublayers to be clipped to the bounds of the receiver. If set to false, sublayers whose frames extend beyond the visible bounds of the receiver are not clipped.
+
+Example: [examples/masksToBounds.html](http://rsms.me/uilayer/examples/masksToBounds.html)
 
 
 ## Animation
@@ -223,7 +234,7 @@ Test if a layer is a sublayer of another layer.
 
 Returns the farthest descendant of the layer hierarchy that contains a specified point.
 
-Example: <http://rsms.me/uilayer/examples/hitTest.html>
+Example: [examples/hitTest.html](http://rsms.me/uilayer/examples/hitTest.html)
 
 ### layer.excludedFromHitTesting ⇄ bool
 
@@ -237,9 +248,19 @@ Controls whether the layer is included in hit testing. Defaults to true. Setting
 The DOM node which is used to represent the layer in the document. Can be assigned during creation, but not later.
 
 
+### layer.ownerDocument → HTMLDocument
+
+The DOM document which this layer is owned by (created by). Note that a layer always have a ownerDocument, even if it's not in a DOM tree.
+
+
+### layer.document → HTMLDocument
+
+The DOM document which this layer is currently presented in, if any. You can use this to test if the layer is part of the DOM tree or not.
+
+If you just want to know if a layer is visible or not, see [`layer.hidden`](http://rsms.me/uilayer/#layer.hidden-bool).
+
 
 ## Handling events
-
 
 ### layer.on(type:string, handler:^(event)) → handler
 
@@ -278,6 +299,8 @@ Indicates whether the layer is backed by high-performance 3D rendering or not.
 ### layer.tag ⇄ string
 
 Assign a document-wide unique tag to this layer. This will effectively set `id="tag"` on the underlying element.
+
+Example: [examples/tag.html](http://rsms.me/uilayer/examples/tag.html)
 
 ### UILayer.layerWithTag(tag:string) → layer
 

@@ -7,4 +7,4 @@ if (   typeof window == 'undefined'
 }
 
 module.exports = exports = require './UILayer'
-export version = '0.0.3'
+export version = '0.0.4'

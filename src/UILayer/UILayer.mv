@@ -34,7 +34,7 @@ _canonicalColor = ^(color) {
   color
 }
 
-kSpecialProperties = {element:1, debug:1, x:1, y:1, width:1, height:1, className:1}
+kSpecialProperties = {element:1, debug:1, x:1, y:1, width:1, height:1, className:1, ownerDocument:1}
 
 module.exports = UILayer = class {
   constructor: ^{
@@ -43,7 +43,7 @@ module.exports = UILayer = class {
     # Setup element
     element = kwargs.element
     if (!element || typeof element != 'object' || !(element instanceof HTMLElement))
-      element = document.createElement 'div'
+      element = (kwargs.ownerDocument || document).createElement 'div'
     element.UILayer = this
     kwargs.element = undefined
     addClassName element, 'uilayer'
@@ -303,6 +303,18 @@ UILayer.properties = {
     },
     set: ^(value) {
       @element.style.setProperty '-webkit-transition-timing-function', value, null
+    }
+  },
+  
+  # -------------------------------------------------------------------------------------------
+  # DOM
+  
+  ownerDocument: { get: ^{ @element.ownerDocument } },
+  
+  document: {
+    get: ^{
+      ownerDocument = @ownerDocument
+      ownerDocument.documentElement.contains(@element) && ownerDocument
     }
   },
   

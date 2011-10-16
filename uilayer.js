@@ -7,7 +7,7 @@ Move.require.define("UILayer","UILayer/index.mv",function(require,module,exports
     return print("Error: UILayer is only compatible with WebKit");
   }
   module.exports = exports = require("./UILayer");
-  exports.version = version = "0.0.3";
+  exports.version = version = "0.0.4";
 });
 Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,module,exports){
   var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, mkCSSPixelValueProperty, UIFrame;
@@ -161,7 +161,8 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
     y: 1,
     width: 1,
     height: 1,
-    className: 1
+    className: 1,
+    ownerDocument: 1
   };
   module.exports = UILayer = __class(UILayer = function UILayer() {
     return __class.create(UILayer, arguments);
@@ -170,7 +171,7 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
       var kwargs, element;
       kwargs = typeof arguments[0] === "object" ? arguments[0] : arguments.keywords || {};
       element = kwargs.element;
-      if (!element || typeof element !== "object" || !(element instanceof HTMLElement)) element = document.createElement("div");
+      if (!element || typeof element !== "object" || !(element instanceof HTMLElement)) element = (kwargs.ownerDocument || document).createElement("div");
       element.UILayer = this;
       kwargs.element = undefined;
       addClassName(element, "uilayer");
@@ -465,6 +466,18 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
       set: function (value) {
         value !== null && typeof value === "object" && value.__kw === _MoveKWArgsT && (arguments.keywords = value, value = value.value);
         return this.element.style.setProperty("-webkit-transition-timing-function", value, null);
+      }
+    },
+    ownerDocument: {
+      get: function () {
+        return this.element.ownerDocument;
+      }
+    },
+    document: {
+      get: function () {
+        var ownerDocument;
+        ownerDocument = this.ownerDocument;
+        return ownerDocument.documentElement.contains(this.element) && ownerDocument;
       }
     },
     tag: {
