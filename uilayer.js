@@ -475,6 +475,26 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
         tag !== null && typeof tag === "object" && tag.__kw === _MoveKWArgsT && (arguments.keywords = tag, tag = tag.tag);
         return this.element.id = Text(tag);
       }
+    },
+    excludedFromHitTesting: {
+      get: function () {
+        return this.element.style.getPropertyValue("pointer-events") === "none";
+      },
+      set: function (isExcluded) {
+        isExcluded !== null && typeof isExcluded === "object" && isExcluded.__kw === _MoveKWArgsT && (arguments.keywords = isExcluded, isExcluded = isExcluded.isExcluded);
+        if (isExcluded) return this.element.style.setProperty("pointer-events", "none", null); else return this.element.style.removeProperty("pointer-events");
+      }
+    }
+  };
+  UILayer.hitTest = function hitTest(x, y) {
+    x !== null && typeof x === "object" && x.__kw === _MoveKWArgsT && (arguments.keywords = x, y = x.y, x = x.x);
+    var element, el;
+    if (element = document.elementFromPoint(x, y)) {
+      el = element;
+      while (!UILayer.prototype.isPrototypeOf(el.UILayer) || el !== element && el.UILayer.excludedFromHitTesting) {
+        if (!(el = el.parentNode)) return;
+      }
+      return el.UILayer;
     }
   };
   UILayer.textureBackedProperties = {
