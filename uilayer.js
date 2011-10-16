@@ -7,7 +7,7 @@ Move.require.define("UILayer","UILayer/index.mv",function(require,module,exports
     return print("Error: UILayer is only compatible with WebKit");
   }
   module.exports = exports = require("./UILayer");
-  exports.version = version = "0.0.4";
+  exports.version = version = "0.0.5";
 });
 Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,module,exports){
   var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, mkCSSPixelValueProperty, UIFrame;
@@ -258,14 +258,39 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
         return (pel = this.element.parentNode) && pel.UILayer && UILayer.prototype.isPrototypeOf(pel.UILayer) && pel.UILayer;
       }
     },
-    classNames: {
+    perspective: {
       get: function () {
-        return classNames(this.element);
+        var v;
+        return (v = this.style.getPropertyCSSValue("-webkit-perspective")) && v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 0;
       },
-      set: function (cssClassNames) {
-        cssClassNames !== null && typeof cssClassNames === "object" && cssClassNames.__kw === _MoveKWArgsT && (arguments.keywords = cssClassNames, cssClassNames = cssClassNames.cssClassNames);
-        if (Array.isArray(cssClassNames)) cssClassNames = cssClassNames.join(" ");
-        return this.element.className = cssClassNames;
+      set: function (distance) {
+        distance !== null && typeof distance === "object" && distance.__kw === _MoveKWArgsT && (arguments.keywords = distance, distance = distance.distance);
+        return this.element.style.webkitPerspective = distance || "none";
+      }
+    },
+    perspectiveOrigin: {
+      get: function () {
+        var style, v;
+        style = this.element.style;
+        return [ (v = style.getPropertyCSSValue("-webkit-perspective-origin-x")) && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || .5) / 100, (v = style.getPropertyCSSValue("-webkit-perspective-origin-y")) && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || .5) / 100, (v = style.getPropertyCSSValue("-webkit-perspective-origin-z")) && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || 0) / 100 ];
+      },
+      set: function (distance) {
+        distance !== null && typeof distance === "object" && distance.__kw === _MoveKWArgsT && (arguments.keywords = distance, distance = distance.distance);
+        if (Array.isArray(distance)) distance = distance[0] * 100 + "% " + (distance[1] || .5) * 100 + "% " + (distance[2] || 0) * 100 + "%";
+        return this.element.style.webkitPerspectiveOrigin = distance;
+      }
+    },
+    preserve3d: {
+      get: function () {
+        return this.element.style.webkitTransformStyle === "preserve-3d";
+      },
+      set: function (preserve3d) {
+        preserve3d !== null && typeof preserve3d === "object" && preserve3d.__kw === _MoveKWArgsT && (arguments.keywords = preserve3d, preserve3d = preserve3d.preserve3d);
+        if (preserve3d) {
+          return this.element.style.setProperty("-webkit-transform-style", "preserve-3d", null);
+        } else {
+          return this.element.style.removeProperty("-webkit-transform-style");
+        }
       }
     },
     frame: {
@@ -328,6 +353,16 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
           k !== null && typeof k === "object" && k.__kw === _MoveKWArgsT && (arguments.keywords = k, v = k.v, k = k.k);
           return style_[k] = v;
         });
+      }
+    },
+    classNames: {
+      get: function () {
+        return classNames(this.element);
+      },
+      set: function (cssClassNames) {
+        cssClassNames !== null && typeof cssClassNames === "object" && cssClassNames.__kw === _MoveKWArgsT && (arguments.keywords = cssClassNames, cssClassNames = cssClassNames.cssClassNames);
+        if (Array.isArray(cssClassNames)) cssClassNames = cssClassNames.join(" ");
+        return this.element.className = cssClassNames;
       }
     },
     doubleSided: {
@@ -918,6 +953,6 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   if ((head = document.getElementsByTagName("head")).length) head = head[0]; else head = document.body || document.documentElement;
   baseStyle = document.createElement("style");
   baseStyle.id = "UILayer-base-style";
-  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  visibility: visible;" + "  position: absolute;" + "  left:0; top:0; width:auto; height:auto;" + "  overflow: visible;" + "  -webkit-user-select:none;" + "  -webkit-text-size-adjust:none;" + "  z-index:0;" + "  opacity:1;" + "}\n" + ".uilayer.textureBacked {" + "  -webkit-transform: matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);" + "  -webkit-transform-origin: 50% 50% 0%;" + "  -webkit-backface-visibility: hidden;" + "}\n" + ".uilayer.animated {" + "  -webkit-transition-duration: 500ms;" + "  -webkit-transition-timing-function: ease;" + "  -webkit-transition-delay: 0;" + "  -webkit-transition-property: none;" + "}"));
+  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  visibility: visible;" + "  position: absolute;" + "  left:0; top:0; width:auto; height:auto;" + "  overflow: visible;" + "  z-index:0;" + "  opacity:1;" + "}\n" + ".uilayer.textureBacked {" + "  -webkit-transform: matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);" + "  -webkit-transform-origin: 50% 50% 0%;" + "  -webkit-backface-visibility: hidden;" + "  -webkit-transform-style: flat;" + "}\n" + ".uilayer.animated {" + "  -webkit-transition-duration: 500ms;" + "  -webkit-transition-timing-function: ease;" + "  -webkit-transition-delay: 0;" + "  -webkit-transition-property: none;" + "}"));
   return head.appendChild(baseStyle);
 });

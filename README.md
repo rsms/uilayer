@@ -131,6 +131,27 @@ Setting this value to true causes sublayers to be clipped to the bounds of the r
 Example: [examples/masksToBounds.html](http://rsms.me/uilayer/examples/masksToBounds.html)
 
 
+### layer.perspective ⇄ number
+
+Used to give an illusion of depth; it determines how layers change size based on their z-offset from the z=0 plane. You can think of it as though you're looking at the page from a distance p away. Layers on the z=0 plane appear in their normal size. Something at a z offset of p/2 (halfway between the viewer and the z=0 plane) will look twice as big, and something at a z offset of -p will look half as big. Thus, large values give a little foreshortening effect, and small values lots of foreshortening. Values between 500 and 1000 give a reasonable-looking result for most content.
+
+Defaults to "none" (i.e. "no perspective" or "orthographic projection").
+
+The default origin for the perspective effect is the center of the layer, but you can control this with [`perspectiveOrigin`](http://rsms.me/uilayer/#layer.hidden-bool).
+
+Example: [examples/perspective.html](http://rsms.me/uilayer/examples/perspective.html)
+
+
+### layer.perspectiveOrigin ⇄ [x, y, z]
+
+Perspective origin. Defaults to `[0.5, 0.5, 0]`.
+
+
+### layer.preserve3d ⇄ bool
+
+When set to false (the default value), transformed sublayers are flattened into the plane of their superlayer (think of the 3D transform as simply a painting effect). However, when setting this to true, the layer to which it is assigned does not flatten its sublayers into it; instead, those sublayers live in a shared 3D space with the superlayer.
+
+
 ## Animation
 
 ### layer.animated ⇄ bool | string

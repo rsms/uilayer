@@ -442,7 +442,8 @@ import UILayer
 if (!UILayer) return
 
 UILayer.debug = true;
-rootLayer = UILayer { x:20, y:20, width:2, height:70, tag:'logo', backgroundColor:'transparent' }
+rootLayer = UILayer { x:20, y:20, width:2, height:70, tag:'logo', backgroundColor:'transparent',
+  perspective:1000, doubleSided:true, preserve3d:true }
 document.body.appendChild rootLayer.element
 
 addLetter = ^(letter, width, previousLayer) {
@@ -451,6 +452,8 @@ addLetter = ^(letter, width, previousLayer) {
     width: width || 60,
     element: <div>{letter}</div>,
     animated: 'geometry',
+    preserve3d: true,
+    style: {'-webkit-user-select':'none'}
   }
   
   if (previousLayer) {

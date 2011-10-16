@@ -132,13 +132,45 @@ UILayer.properties = {
     }
   },
   
-  classNames: {
-    get: ^{ classNames @element },
-    set: ^(cssClassNames) {
-      if (Array.isArray cssClassNames)
-        cssClassNames = cssClassNames.join ' '
-      @element.className = cssClassNames
-    }
+  # -------------------------------------------------------------------------------------------
+  # Style Attributes
+  
+  perspective: {
+    get: ^{
+      (v = @style.getPropertyCSSValue '-webkit-perspective') &&
+        v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 0
+    },
+    set: ^(distance) { @element.style.webkitPerspective = distance || 'none' },
+  },
+  
+  perspectiveOrigin: {
+    get: ^{
+      style = @element.style
+      [ (v = style.getPropertyCSSValue '-webkit-perspective-origin-x')
+          && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || 0.5) / 100,
+        (v = style.getPropertyCSSValue '-webkit-perspective-origin-y')
+          && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || 0.5) / 100,
+        (v = style.getPropertyCSSValue '-webkit-perspective-origin-z')
+          && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || 0) / 100 ]
+    },
+    set: ^(distance) {
+      if (Array.isArray distance)
+        distance = (distance[0]*100)+'% '+((distance[1] || 0.5)*100)+'% '+((distance[2] || 0)*100)+'%'
+      @element.style.webkitPerspectiveOrigin = distance
+    },
+  },
+  
+  preserve3d: {
+    get: ^{
+      @element.style.webkitTransformStyle == 'preserve-3d'
+    },
+    set: ^(preserve3d) {
+      if (preserve3d) {
+        @element.style.setProperty '-webkit-transform-style', 'preserve-3d', null
+      } else {
+        @element.style.removeProperty '-webkit-transform-style'
+      }
+    },
   },
   
   frame: {
@@ -188,6 +220,15 @@ UILayer.properties = {
       style_ = @element.style
       style.forEach ^(k, v) { style_[k] = v }
     },
+  },
+  
+  classNames: {
+    get: ^{ classNames @element },
+    set: ^(cssClassNames) {
+      if (Array.isArray cssClassNames)
+        cssClassNames = cssClassNames.join ' '
+      @element.className = cssClassNames
+    }
   },
   
   doubleSided: {
@@ -789,8 +830,8 @@ baseStyle.appendChild document.createTextNode '.uilayer {'+
 '  position: absolute;'+
 '  left:0; top:0; width:auto; height:auto;'+
 '  overflow: visible;'+
-'  -webkit-user-select:none;'+
-'  -webkit-text-size-adjust:none;'+
+#'  -webkit-user-select:none;'+
+#'  -webkit-text-size-adjust:none;'+
 '  z-index:0;'+
 '  opacity:1;'+
 '}\n'+
@@ -798,6 +839,7 @@ baseStyle.appendChild document.createTextNode '.uilayer {'+
 '  -webkit-transform: matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);'+
 '  -webkit-transform-origin: 50% 50% 0%;'+
 '  -webkit-backface-visibility: hidden;'+
+'  -webkit-transform-style: flat;'+
 '}\n'+
 '.uilayer.animated {'+
 '  -webkit-transition-duration: 500ms;'+

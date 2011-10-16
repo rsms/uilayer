@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=640,initial-scale=0.5,user-scalable=no">
+    <script src="http://movelang.org/move-0.4.4.js"></script>
+    <script>document.write('<'+'script src="../uilayer.js?'+(+new Date)+'"><'+'/script>');</script>
+    <script type="text/move">
+
+import UILayer
+UILayer.debug = true
+document.body.appendChild ((rootLayer = UILayer({ x: 200, y: 200, width:600, height:600 })).element)
+
+rootLayer.perspective = 1000
+
+layer = rootLayer.addSublayer UILayer {
+  x:200, y:80, width:200, height:200, element: <x>.rotateBy 0, 45</x>,
+  animationDuration: 50, doubleSided:true }
+
+layer2 = rootLayer.addSublayer UILayer {
+  x:200, y:280, width:200, height:200, element: <x>.rotateBy 45</x>,
+  animationDuration: 50, doubleSided:true }
+
+rotationY = 45
+layer.rotateBy 0, rotationY
+
+rotationX = 45
+layer2.rotateBy rotationX, 0
+
+perspectiveValue = document.querySelector '.perspectiveValue'
+perspectiveInput = document.querySelector '.perspectiveInput'
+perspectiveValue.innerText = perspectiveInput.value = rootLayer.perspective
+perspectiveInput.setAttribute 'min', layer.frame.width
+perspectiveInput.onchange = ^{
+  rootLayer.perspective = (@value == @max) ? 0 : @value
+  perspectiveValue.innerText = rootLayer.perspective
+}
+
+perspectiveOriginValue = document.querySelector '.perspectiveOriginValue'
+perspectiveOriginValue.innerText = '0.5, 0.5'
+rootLayer.on 'mousemove', ^(event) {
+  offsetX = event.pageX - rootLayer.frame.x
+  offsetY = event.pageY - rootLayer.frame.y
+  rootLayer.perspectiveOrigin = po = [offsetX / rootLayer.frame.width, offsetY / rootLayer.frame.height, 0]
+  perspectiveOriginValue.innerText = po[0].toFixed(3)+', '+po[1].toFixed(3)+', '+po[2].toFixed(3)
+}
+
+
+    </script>
+    <style>
+      html { background: black url(checker-pattern.png) repeat scroll top left; }
+      p {
+        font:16px helvetica,sans-serif;
+        display:inline-block;
+        color:black;
+        background:white;
+        padding:1em;
+        vertical-align:bottom;
+      }
+      x {
+        font:16px/100px helvetica,sans-serif;
+        text-align:center;
+      }
+      input { vertical-align:bottom; }
+    </style>
+  </head>
+  <body>
+    <p>
+      <tt>rootLayer.perspective</tt> =
+      <input type="range" min="10" max="5000" class="perspectiveInput">
+      <label class="perspectiveValue"></label>
+      &nbsp; &nbsp; &nbsp;
+      <tt>rootLayer.perspectiveOrigin</tt> =
+      <label class="perspectiveOriginValue"></label>
+    </p>
+  </body>
+</html>
