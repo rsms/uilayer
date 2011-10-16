@@ -5,11 +5,10 @@ UILayer provides an API on top of the WebKit DOM **for working with the concept 
 
 ## Examples
 
-- [Psychotic layers randomly moving around inside another layer](http://hunch.se/tmp/uilayer/examples/)
+- [Psychotic layers randomly moving around inside another layer](http://rsms.me/uilayer/examples/)
+- [Flip some pages in the Flip Book](http://rsms.me/uilayer/examples/flip-book.html)
 
-- [Flip some pages in the Flip Book](http://hunch.se/tmp/uilayer/examples/flip-book.html)
-
-See the "examples" directory for more examples.
+See the ["examples" directory in the source repository](https://github.com/rsms/uilayer/tree/master/examples) for more examples.
 
 > Note: UILayer only works in WebKit-based environments, such as web views on Apple iOS, OS X and Android or in web browsers like Google Chrome and Safari.
 
@@ -25,14 +24,14 @@ You can also build a JavaScript library from the source files (requires [move](h
 
 # API
 
-### `UILayer(x, y, z, width, height, scale, frame, element, animated, style, sublayers, ..) → layer`
+### UILayer(x, y, z, width, height, scale, frame, element, animated, style, sublayers, ..) → layer
 
 Create a new UILayer with optional initial properties.
 
 
 ## Geometry
 
-### `layer.frame ⇄ UIFrame {x:number, y:number, z:number, width:number, height:number}`
+### layer.frame ⇄ UIFrame {x:number, y:number, z:number, width:number, height:number}
 
 The position and size of the layer in the coordinate space of its parent layer.
 
@@ -41,80 +40,80 @@ The returned `UIFrame` object is a mutable proxy which when modified affects the
 Providing a width and/or height of 0 (zero) makes the layer span the width and/or height of it's parent.
 
 
-### `layer.scale ⇄ number (0-inf]`
+### layer.scale ⇄ number (0-inf]
 
 Scale of the layer. Defaults to 1.0 (100%).
 
 
-### `layer.scaleBy(x, y:0, z:0)`
+### layer.scaleBy(x, y:0, z:0)
 
 Modify scale of the layer.
 
 
-### `layer.moveBy(x, y:0, z:0)`
+### layer.moveBy(x, y:0, z:0)
 
 Modify position of the layer.
 
 
-### `layer.rotateBy(x, y:0, z:0)`
+### layer.rotateBy(x, y:0, z:0)
 
 Modify rotation of the layer. Degrees are expressed as [0-360].
 
 
-### `layer.anchorPoint ⇄ [x, y, z]`
+### layer.anchorPoint ⇄ [x, y, z]
 
 Defines the anchor point of the layer's bounds rectangle. Animatable.
 
 Described in the unit coordinate space. The value of this property is specified in points. Defaults to (0.5, 0.5, 0), the center of the bounds rectangle.
 
 
-### `layer.zPosition ⇄ number`
+### layer.zPosition ⇄ number
 
 Layers with a larger zPosition will be placed in front of those with a smaller one. Defaults to 0.
 
 
 ## Style attributes
 
-### `layer.doubleSided ⇄ bool`
+### layer.doubleSided ⇄ bool
 
 Determines whether the receiver is displayed when facing away from the viewer. Defaults to false.
 
-### `layer.cornerRadius ⇄ number`
+### layer.cornerRadius ⇄ number
 
 Specifies a radius used to draw the rounded corners of the receiver’s background. Defaults to 0.
 
 Note: cornerRadius does not affect hit testing.
 
-### `layer.backgroundColor ⇄ string`
+### layer.backgroundColor ⇄ string
 
 The background color of the layer. Defaults to "transparent" (no background color).
 
-### `layer.color ⇄ string`
+### layer.color ⇄ string
 
 Foreground (text) color of the layer. Defaults to the inherited value (from the environment, i.e. default browser style or host website style).
 
-### `layer.opacity ⇄ number [0-1]`
+### layer.opacity ⇄ number [0-1]
 
 Opacity of the layer. Defaults to 1 (fully opaque).
 
 
-### `layer.hidden ⇄ bool`
+### layer.hidden ⇄ bool
 
 Hide or show the layer. Defaults to false.
 
 A hidden view disappears from its window and does not receive input events. It remains in its superview’s list of sublayers, however, and participates in autoresizing as usual. Hiding a view with sublayers has the effect of hiding those sublayers and any view descendants they might have. This effect is implicit and does not alter the hidden state of the receiver’s descendants.
 
 
-### `layer.computedStyle → Style`
+### layer.computedStyle → Style
 
 Returns a style object defining the layers computed style (equivalent to `window.computedStyle` for an element).
 
-### `layer.style ⇄ Style`
+### layer.style ⇄ Style
 
 The explicit (CSS) style of the layer.
 
 
-### `layer.masksToBounds ⇄ bool`
+### layer.masksToBounds ⇄ bool
 
 Determines whether sublayers are confined to the bounds of the receiver. Defaults to false.
 
@@ -123,7 +122,7 @@ Setting this value to true causes sublayers to be clipped to the bounds of the r
 
 ## Animation
 
-### `layer.animated ⇄ bool | string`
+### layer.animated ⇄ bool | string
 
 Animate property changes. Defaults to false.
 
@@ -143,7 +142,7 @@ Example:
     # Layer moves 100 px to the right during 500ms
 
 
-### `layer.animationDuration ⇄ number (0-inf]`
+### layer.animationDuration ⇄ number (0-inf]
 
 Duration in milliseconds of animations implied by changing properties. Only effective if `layer.animated` is set to true.
 
@@ -156,7 +155,7 @@ Example:
     # Layer moves 100 px to the right during 200ms
 
 
-### `layer.animationTimingFunction ⇄ string`
+### layer.animationTimingFunction ⇄ string
 
 Available timing functions:
 
@@ -178,60 +177,62 @@ Example:
 
 ## Layer hierarchy
 
-### `layer.superlayer → layer`
+### layer.superlayer → layer
 
 Parent layer.
 
 
-### `layer.sublayers → [layer, ..]`
+### layer.sublayers → [layer, ..]
 
 A list of all sublayers (other layers that are owned by, or live within, the layer).
 
 
-### `layer.firstSublayer → layer`
+### layer.firstSublayer → layer
 
 First sublayer (equivalent to `layer.sublayers[0]`).
 
 
-### `layer.addSublayer(layer:sublayer) → sublayer`
+### layer.addSublayer(layer:sublayer) → sublayer
 
 Add a layer as a sublayer to the receiving layer. Returns the same sublayer that was passed as input.
 
 
-### `layer.removeSublayer(layer:sublayer, index:number) → sublayer`
+### layer.removeSublayer(layer:sublayer, index:number) → sublayer
 
 Remove a sublayer by reference or index. Returns the sublayer removed or undefined if no matching sublayer was found.
 
 
-### `layer.removeAllSublayers() → [layer, ..]`
+### layer.removeAllSublayers() → [layer, ..]
 
 Remove all sublayers. Returns the layers that was removed.
 
 
-### `layer.removeFromSuperlayer()`
+### layer.removeFromSuperlayer()
 
 Removes the layer from the superlayer.
 
 
-### `layer.isSublayerOf(layer:superlayer) → bool`
+### layer.isSublayerOf(layer:superlayer) → bool
 
 Test if a layer is a sublayer of another layer.
 
 
 ## Hit testing
 
-### `UILayer.hitTest(x, y) → layer`
+### UILayer.hitTest(x, y) → layer
 
 Returns the farthest descendant of the layer hierarchy that contains a specified point.
 
-### `layer.excludedFromHitTesting ⇄ bool`
+Example: <http://rsms.me/uilayer/examples/hitTest.html>
+
+### layer.excludedFromHitTesting ⇄ bool
 
 Controls whether the layer is included in hit testing. Defaults to true. Setting this to false causes the layer to stop accepting user input -- such as touches and clicks -- and also being ignored by `UILayer.hitTest`.
 
 
 ## DOM
 
-### `layer.element → HTMLElement`
+### layer.element → HTMLElement
 
 The DOM node which is used to represent the layer in the document. Can be assigned during creation, but not later.
 
@@ -240,16 +241,16 @@ The DOM node which is used to represent the layer in the document. Can be assign
 ## Handling events
 
 
-### `layer.on(type:string, handler:^(event)) → handler`
+### layer.on(type:string, handler:^(event)) → handler
 
 Register *handler* to be triggered each time *event* is emitted on the receiving layer. *type* can be any string, including DOM Level 3 official events and custom, arbitrary events.
 
-### `layer.removeEventListener(type:string, handler:^(event)) → bool`
+### layer.removeEventListener(type:string, handler:^(event)) → bool
 
 Remove an event handler.
 
-### `layer.emit(type, bubbles:true, cancelable:true, ...) → bool`
-### `layer.emit(type, {bubbles:true, cancelable:true, ...}) → bool`
+### layer.emit(type, bubbles:true, cancelable:true, ...) → bool
+### layer.emit(type, {bubbles:true, cancelable:true, ...}) → bool
 
 Emit (or: trigger/raise/send) an event on the receiving layer.
 
@@ -267,41 +268,40 @@ Example:
 ## Performance and edge-cases
 
 
-### `layer.is3DBacked → bool`
+### layer.is3DBacked → bool
 
 Indicates whether the layer is backed by high-performance 3D rendering or not.
 
 
 ## Identifying the layer at runtime
 
-### `layer.tag ⇄ string`
+### layer.tag ⇄ string
 
 Assign a document-wide unique tag to this layer. This will effectively set `id="tag"` on the underlying element.
 
-### `UILayer.layerWithTag(tag:string) → layer`
+### UILayer.layerWithTag(tag:string) → layer
 
 Find a layer anywhere in the document which has the specified tag.
 
 
----
 
 ## Events
 
 A layer can emit any DOM Level 3 Events as well as arbitrary, user-defined events. Listed below are the UILayer-specific events.
 
-### `uilayer:added-to-superlayer {superlayer:UILayer}`
+### uilayer:added-to-superlayer {superlayer:UILayer}
 
 The receiving layer was added as a sublayer to another layer (superlayer).
 
-### `uilayer:removed-from-superlayer {superlayer:UILayer}`
+### uilayer:removed-from-superlayer {superlayer:UILayer}
 
 The receiving layer was removed from a layer (superlayer).
 
-### `uilayer:added-sublayer {sublayer:UILayer}`
+### uilayer:added-sublayer {sublayer:UILayer}
 
 A sublayer was added to the receiving layer.
 
-### `uilayer:removed-sublayer {sublayer:UILayer}`
+### uilayer:removed-sublayer {sublayer:UILayer}
 
 A sublayer was removed from the receiving layer.
 

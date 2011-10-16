@@ -278,25 +278,148 @@ var Showdown = {converter:function() {
     return"~E" + b.charCodeAt(0) + "E"
   }
 }};
-
-$.get('README.md', function (body) {
-  var html = (new Showdown.converter()).makeHtml(body);
-  document.body.innerHTML = html;
-})
     </script>
     <style>
-      html {
-        background: white;
-        color: black;
-        font-family: "Helvetica";
-        font-size: 16px;
-      }
-      body {
-        display:block;
-        margin: 0 auto;
-        width: 800px;
-      }
+html {
+  background: white;
+  color: black;
+  font: 16px/1.4 helvetica, arial, sans-serif;
+}
+body {
+  display:block;
+  margin: 0 auto;
+  padding-bottom: 5em;
+  width: 800px;
+}
+
+h1,h2,h3,h4,h5 {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizelegibility;
+  margin-top:1.618em;
+}
+
+h1 { color: #333; }
+h2 { color: #222; }
+h3 { color: #333; }
+h4 { color: #666; }
+
+a:link, a:active, a:visited { color: #0D2681; text-decoration:none; }
+a { text-decoration:none; }
+a:link, a:active { color:#316d96; }
+a:visited { color:#7e5494; }
+a:link:hover, a:active:hover, a:visited:hover { text-decoration:underline; }
+a:link:hover, a:active:hover { color:#006be4; }
+a:visited:hover { color:#af00cf; }
+a > img { margin-bottom:-1px; }
+a.img { border:none; background:transparent !important; }
+
+h1 a,h2 a,h3 a,h4 a,h5 a {
+  color:inherit !important;
+}
+
+blockquote {
+  border-left: 4px solid #E68E88;
+  padding-left: 1em;
+  margin-right: 1em;
+  margin:0 1em 0 0;
+  color: #664E4A;
+  font-style: italic;
+}
+code, pre {
+  font-family: menlo, monospace;
+  background-color: #f0f0f0;
+}
+code { color: inherit; }
+pre {
+  color: #555;
+  border-left: 2px solid #ddd;
+  font-weight: lighter;
+  padding: 1em;
+  line-height:1.4;
+}
+
+#content h1 {
+  text-align:center;
+  border-top: 1px solid #ddd;
+  padding-top:1em;
+  margin-left:-999em; padding-left:999em;
+  margin-right:-999em; padding-right:999em;
+  margin-top:3em;
+}
+#content h1 a {
+  display:block;
+}
+
+h2 {
+  border-top: 2px solid #ddd;
+  padding-top:0.5em;
+  margin-top: 3em;
+}
+
+h3 {
+  font-family: menlo, monospace;
+  font-weight: normal;
+  color: black;
+  line-height:1.5;
+  padding:0;
+  display:inline-block;
+  border-radius: 4px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  margin-bottom:0;
+}
+h3 a {
+  display: block;
+  text-indent:-2em;
+  padding:0.2em 0.4em;
+  padding-left:2.4em;
+  border-left: 4px solid #7B77E3;
+  background: #F7F3F1;
+}
+h3 .dimmed {
+  color:#A19789;
+}
+h3 a:hover {
+
+}
+
+.footnote { color: #525151; }
+.footnote:before { color: #525151; }
+.footnote:after { color: #525151; }
+div.footnotes { background: #F0F0F0; }
+
     </style>
   </head>
-  <body></body>
+  <body>
+<a href="http://github.com/rsms/uilayer"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://a248.e.akamai.net/assets.github.com/img/e6bef7a091f5f3138b8cd40bc3e114258dd68ddf/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub"></a>
+    <h1>UILayer</h1>
+    <div id="content">
+    </div>
+    <script>
+var content = document.getElementById('content');
+var loadingTimer = setTimeout(function (){
+  content.innerHTML = '<p>Loading...</p>'
+}, 1000);
+var ts = new Date;
+ts = ts.getFullYear()+'-'+ts.getMonth()+'-'+ts.getDate()+'-'+ts.getHours();
+$.get('README.md?'+ts, function (body) {
+  clearTimeout(loadingTimer);
+  var html = (new Showdown.converter()).makeHtml(body);
+  content.innerHTML = html.replace(/<h1[^>]+>.+<\/h1>/, '');
+  
+  if (typeof content.querySelectorAll === 'function') {
+    Array.prototype.slice.call(content.querySelectorAll('h3 > a')).forEach(function (el) {
+      if (el.innerHTML === el.innerText)
+        el.innerHTML = el.innerText.replace(/^layer\./, '<span class="dimmed">layer.</span>');
+    });
+  }
+  
+  var h = document.location.hash;
+  if (h && h !== '#') {
+    document.location.hash = '';
+    setTimeout(function (){ document.location.hash = h; }, 1);
+  }
+})
+    </script>
+  </body>
 </html>
