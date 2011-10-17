@@ -113,14 +113,10 @@
           }
 
           // hacky and ugly, but feels kind of nice...
-          setTimeout(function(){
-            pre.style.opacity = '1'
-            pre.innerText = body;
-            pre.className = 'prettyprint lang-'+lang
-            prettyPrint();
-          }, 200);
-          
-
+          pre.style.opacity = '1'
+          pre.innerText = body;
+          pre.className = 'prettyprint lang-'+lang
+          prettyPrint();
         });
       }
     
