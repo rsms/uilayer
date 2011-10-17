@@ -8,7 +8,7 @@ UILayer provides an API on top of the WebKit DOM **for working with the concept 
 - [Psychotic layers randomly moving around](http://rsms.me/uilayer/examples/animate-combo.html)
 - [Flip some pages in the Flip Book](http://rsms.me/uilayer/examples/flip-book.html)
 - [Interactive 3D perspective](http://rsms.me/uilayer/examples/perspective.html)
-- [More demos in /examples/...](http://rsms.me/uilayer/examples/)
+- [More examples...](http://rsms.me/uilayer/examples/)
 
 > Note: UILayer only works in WebKit-based environments, such as web views on Apple iOS, OS X and Android or in web browsers like Google Chrome and Safari.
 
