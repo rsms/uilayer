@@ -1,6 +1,6 @@
 # UILayer
 
-UILayer provides an API on top of the WebKit DOM **for working with the concept of layers**. Instead of manipulating DOM elements using a myriad of mixed concepts, you go though a single, well defined API.
+UILayer provides a JavaScript API on top of WebKit **for working with the concept of layers**. Instead of manipulating DOM elements using a myriad of mixed concepts, you go though a single, well defined API.
 
 
 ## Demo and example
