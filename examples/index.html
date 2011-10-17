@@ -94,7 +94,6 @@
         sourcePane.className = 'open';
         pre.style.opacity = '0'
         title.innerText = path;
-        pre.innerText = '';
         $.get(path+'?'+(+new Date), function (body) {
           
           // skip outer
