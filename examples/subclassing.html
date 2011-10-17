@@ -33,7 +33,6 @@ ClockLayer = class UILayer, {
     MM = d.getMinutes()
     if (MM < 10) MM = '0'+MM
     @element.innerHTML = H+':'+MM+'<span class="mer">'+mer+'</span>'
-    @element.replace 
     self = this
     after {delay:(60-d.getSeconds())*1000} ^{ self.updateTime() }
   },
