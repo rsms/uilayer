@@ -9,12 +9,95 @@ Move.require.define("UILayer","UILayer/index.mv",function(require,module,exports
   module.exports = exports = require("./UILayer");
   exports.version = version = "0.0.5";
 });
+Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,module,exports){
+  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, mkCSSPixelValueProperty, UIFrame;
+  M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
+  EHTML = Move.EHTML;
+  mkCSSPixelValueProperty = function mkCSSPixelValueProperty(name, eventPropertyName, defaultValue) {
+    name !== null && typeof name === "object" && name.__kw === _MoveKWArgsT && (arguments.keywords = name, defaultValue = name.defaultValue, eventPropertyName = name.eventPropertyName, name = name.name);
+    if (defaultValue === undefined) defaultValue = 0;
+    return {
+      enumerable: true,
+      get: function () {
+        var v;
+        if (v = this.layer.element.style.getPropertyCSSValue(name)) {
+          if (v.primitiveType === CSSPrimitiveValue.CSS_PX) return v.getFloatValue(CSSPrimitiveValue.CSS_PX);
+        }
+        return defaultValue;
+      },
+      set: function (value) {
+        value !== null && typeof value === "object" && value.__kw === _MoveKWArgsT && (arguments.keywords = value, value = value.value);
+        if (value === undefined || value === null) {
+          this.layer.element.style.removeProperty(name);
+          return;
+        }
+        if (typeof value === "number") this.layer.element.style.setProperty(name, value + "px", null); else this.layer.element.style.setProperty(name, Text(value), null);
+        return this.layer.emit("UILayerFrameDidChange", {
+          changedPropertyName: eventPropertyName
+        });
+      }
+    };
+  };
+  module.exports = exports = UIFrame = __class(UIFrame = function UIFrame() {
+    return __class.create(UIFrame, arguments);
+  }, {
+    constructor: function (layer) {
+      layer !== null && typeof layer === "object" && layer.__kw === _MoveKWArgsT && (arguments.keywords = layer, layer = layer.layer);
+      return Object.defineProperty(this, "layer", {
+        value: layer
+      });
+    },
+    toString: function () {
+      return "{x:" + this.x + ", y:" + this.y + ", width:" + this.width + ", height:" + this.height + "}";
+    }
+  });
+  return Object.defineProperties(UIFrame.prototype, {
+    width: mkCSSPixelValueProperty("width", "width", -1),
+    height: mkCSSPixelValueProperty("height", "height", -1),
+    x: {
+      enumerable: true,
+      get: function () {
+        return this.layer.matrix.m41;
+      },
+      set: function () {
+        var matrix;
+        matrix = this.layer.matrix;
+        matrix.m41 = arguments[0];
+        return this.layer.matrix = matrix;
+      }
+    },
+    y: {
+      enumerable: true,
+      get: function () {
+        return this.layer.matrix.m42;
+      },
+      set: function () {
+        var matrix;
+        matrix = this.layer.matrix;
+        matrix.m42 = arguments[0];
+        return this.layer.matrix = matrix;
+      }
+    },
+    z: {
+      enumerable: true,
+      get: function () {
+        return this.layer.matrix.m43;
+      },
+      set: function () {
+        var matrix;
+        matrix = this.layer.matrix;
+        matrix.m43 = arguments[0];
+        return this.layer.matrix = matrix;
+      }
+    }
+  });
+});
 Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,module,exports){
   var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, UIFrame, classNames, addClassName, hasClassName, removeClassName, _canonicalColor, kSpecialProperties, UILayer, isTouchDevice, touchEventsToMouseEvents, makeFakeTouchEvent, UIEvent, FocusEvent, MouseEvent, TouchEvent, WheelEvent, TextEvent, KeyboardEvent, CompositionEvent, MutationEvent, MutationNameEvent, CustomEvent, TransitionEvent, kEventClasses, head, baseStyle;
   M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
   EHTML = Move.EHTML;
   UIFrame = require("./UIFrame");
-  if (document.body.classList) {
+  if (!document.documentElement || document.documentElement.classList) {
     classNames = function classNames(el) {
       el !== null && typeof el === "object" && el.__kw === _MoveKWArgsT && (arguments.keywords = el, el = el.el);
       return el.classList;
@@ -872,87 +955,4 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   baseStyle.id = "UILayer-base-style";
   baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  visibility: visible;" + "  position: absolute;" + "  left:0; top:0; width:auto; height:auto;" + "  overflow: visible;" + "  z-index:0;" + "  opacity:1;" + "}\n" + ".uilayer.textureBacked {" + "  -webkit-transform: matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);" + "  -webkit-transform-origin: 50% 50% 0%;" + "  -webkit-backface-visibility: hidden;" + "  -webkit-transform-style: flat;" + "}\n" + ".uilayer.animated {" + "  -webkit-transition-duration: 500ms;" + "  -webkit-transition-timing-function: ease;" + "  -webkit-transition-delay: 0;" + "  -webkit-transition-property: none;" + "}"));
   return head.appendChild(baseStyle);
-});
-Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,module,exports){
-  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, mkCSSPixelValueProperty, UIFrame;
-  M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
-  EHTML = Move.EHTML;
-  mkCSSPixelValueProperty = function mkCSSPixelValueProperty(name, eventPropertyName, defaultValue) {
-    name !== null && typeof name === "object" && name.__kw === _MoveKWArgsT && (arguments.keywords = name, defaultValue = name.defaultValue, eventPropertyName = name.eventPropertyName, name = name.name);
-    if (defaultValue === undefined) defaultValue = 0;
-    return {
-      enumerable: true,
-      get: function () {
-        var v;
-        if (v = this.layer.element.style.getPropertyCSSValue(name)) {
-          if (v.primitiveType === CSSPrimitiveValue.CSS_PX) return v.getFloatValue(CSSPrimitiveValue.CSS_PX);
-        }
-        return defaultValue;
-      },
-      set: function (value) {
-        value !== null && typeof value === "object" && value.__kw === _MoveKWArgsT && (arguments.keywords = value, value = value.value);
-        if (value === undefined || value === null) {
-          this.layer.element.style.removeProperty(name);
-          return;
-        }
-        if (typeof value === "number") this.layer.element.style.setProperty(name, value + "px", null); else this.layer.element.style.setProperty(name, Text(value), null);
-        return this.layer.emit("UILayerFrameDidChange", {
-          changedPropertyName: eventPropertyName
-        });
-      }
-    };
-  };
-  module.exports = exports = UIFrame = __class(UIFrame = function UIFrame() {
-    return __class.create(UIFrame, arguments);
-  }, {
-    constructor: function (layer) {
-      layer !== null && typeof layer === "object" && layer.__kw === _MoveKWArgsT && (arguments.keywords = layer, layer = layer.layer);
-      return Object.defineProperty(this, "layer", {
-        value: layer
-      });
-    },
-    toString: function () {
-      return "{x:" + this.x + ", y:" + this.y + ", width:" + this.width + ", height:" + this.height + "}";
-    }
-  });
-  return Object.defineProperties(UIFrame.prototype, {
-    width: mkCSSPixelValueProperty("width", "width", -1),
-    height: mkCSSPixelValueProperty("height", "height", -1),
-    x: {
-      enumerable: true,
-      get: function () {
-        return this.layer.matrix.m41;
-      },
-      set: function () {
-        var matrix;
-        matrix = this.layer.matrix;
-        matrix.m41 = arguments[0];
-        return this.layer.matrix = matrix;
-      }
-    },
-    y: {
-      enumerable: true,
-      get: function () {
-        return this.layer.matrix.m42;
-      },
-      set: function () {
-        var matrix;
-        matrix = this.layer.matrix;
-        matrix.m42 = arguments[0];
-        return this.layer.matrix = matrix;
-      }
-    },
-    z: {
-      enumerable: true,
-      get: function () {
-        return this.layer.matrix.m43;
-      },
-      set: function () {
-        var matrix;
-        matrix = this.layer.matrix;
-        matrix.m43 = arguments[0];
-        return this.layer.matrix = matrix;
-      }
-    }
-  });
 });

@@ -1,6 +1,6 @@
 import .UIFrame
 
-if (document.body.classList) {
+if (!document.documentElement || document.documentElement.classList) {
   classNames = ^(el) { el.classList }
   addClassName = ^(el, className) { el.classList.add className }
   hasClassName = ^(el, className) { el.classList.contains className }
