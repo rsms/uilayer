@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=640,initial-scale=0.5,user-scalable=no">
+    <script src="http://movelang.org/move-0.4.4.js"></script>
+    <script>document.write('<'+'script src="../uilayer.js?'+(+new Date)+'"><'+'/script>');</script>
+    <script type="text/move">
+    
+import UILayer
+if (!UILayer) return alert 'Unsupported web view (UILayer only supports WebKit)'
+
+# Gives each layer a random background color
+UILayer.debug = true
+
+# Create our root layer and add it to the document
+rootLayer = UILayer { x:0, y:0, width: 320, height: 480, animated: true }
+print 'rootLayer ->', rootLayer
+document.body.appendChild rootLayer.element
+
+rootLayer.on 'uilayer:added-sublayer', ^(ev) {
+  print "rootLayer.on 'uilayer:added-sublayer' sublayer:", ev.sublayer }
+rootLayer.on 'uilayer:removed-sublayer', ^(ev) {
+  print "rootLayer.on 'uilayer:removed-sublayer' sublayer:", ev.sublayer }
+
+#rootLayer.masksToBounds = true
+
+print 'rootLayer.frame -> '+rootLayer.frame
+print 'JSON rootLayer.frame ->', JSON rootLayer.frame
+print 'rootLayer.frame enumerable keys -> '+Object.keys rootLayer.frame
+
+after {delay:500} ^{ rootLayer.frame.x = 200 }
+after {delay:700} ^{ rootLayer.frame.y = 200 }
+after {delay:900} ^{ rootLayer.frame.width = 340 }
+after {delay:2000} ^{ rootLayer.scale = 0.4 }
+
+print 'rootLayer ->', rootLayer
+
+animate = ^(layer, baseDelay){
+  layer.animationDuration = 100 + (Math.random()*1000)
+  after {delay:baseDelay+500} ^{ layer.frame.x = Math.random()*200 }
+  after {delay:baseDelay+700} ^{ layer.frame.y = Math.random()*200 }
+  after {delay:baseDelay+900} ^{ layer.frame.width = Math.random()*200 }
+  after {delay:baseDelay+950} ^{ layer.frame.height = Math.random()*200 }
+  after {delay:baseDelay+1000} ^{ layer.scale = 0.2 + (Math.random()*2) }
+  after {delay:baseDelay+1500} ^{
+    layer.scale = 0.2 + (Math.random()*2)
+    layer.frame.x = Math.random()*200
+    layer.frame.y = Math.random()*200
+    layer.frame.width = Math.random()*200
+    layer.frame.height = Math.random()*200
+    animate layer, 100
+  }
+}
+
+layer = rootLayer.addSublayer UILayer {x:10, y:10, width:50, height:50, animated:true}
+animate layer, 1000
+layer = rootLayer.addSublayer UILayer {x:15, y:15, width:50, height:50, animated:true}
+animate layer, 1100
+layer = rootLayer.addSublayer UILayer {x:20, y:20, width:50, height:50, animated:true}
+animate layer, 1200
+layer = rootLayer.addSublayer UILayer {x:25, y:25, width:50, height:50, animated:true}
+animate layer, 1300
+layer = rootLayer.addSublayer UILayer {x:30, y:30, width:50, height:50, animated:true}
+animate layer, 1400
+
+print 'layer.superlayer ->', layer.superlayer
+print 'layer.superlayer.superlayer ->', layer.superlayer.superlayer
+print 'layer.isSublayerOf rootLayer ->', layer.isSublayerOf rootLayer
+print 'rootLayer.isSublayerOf layer ->', rootLayer.isSublayerOf layer
+print 'rootLayer.removeSublayer ->', rootLayer.removeSublayer layer
+
+print 'rootLayer enumerable keys -> '+Object.keys rootLayer
+print 'JSON rootLayer ->', JSON rootLayer
+
+# Events
+# Touch events are routed as mouse events on non-touch platforms
+rootLayer.on 'touchstart', ^(ev){
+  print 'touchstart', ev.clientX, ev.clientY, ev
+  rootLayer.touchmoveListener = rootLayer.on 'touchmove', ^(ev){ print 'touchmove', ev }
+}
+rootLayer.on 'touchend', ^(ev){
+  print 'touchend', ev.clientX, ev.clientY, ev
+  print rootLayer.removeEventListener 'touchmove', rootLayer.touchmoveListener
+}
+
+rootLayer.touchesBegan = ^(ev){
+  print 'touchesBegan', ev.clientX, ev.clientY, ev
+  rootLayer.touchmoveListener = rootLayer.on 'touchmove', ^(ev){ print 'touchmove', ev }
+}
+rootLayer.touchesEnded = ^(ev){
+  print 'touchesEnded', ev.clientX, ev.clientY, ev
+  print rootLayer.removeEventListener 'touchmove', rootLayer.touchmoveListener
+}
+
+
+
+# Custom events
+rootLayer.on 'my-custom-event', ^(ev) { print 'my-custom-event triggered. args.foo =', ev.foo}
+rootLayer.emit 'my-custom-event', {foo:'arbitrary argument'}
+
+# Explicit depth
+layer1 = UILayer { x:0, y:0, width: 100, height: 100 }
+document.body.appendChild layer1.element
+print 'layer1.zPosition', layer1.zPosition
+print 'layer1.scale', layer1.scale
+print 'layer1.anchorPoint', layer1.anchorPoint
+layer1.zPosition = 2
+layer1.backgroundColor = '#f99'
+
+layer2 = UILayer { x:50, y:50, width: 100, height: 100 }
+document.body.appendChild layer2.element
+layer2.zPosition = 1
+layer2.backgroundColor = '#99f'
+
+
+animateRootLayer = ^{
+  rootLayer.animationDuration = 100 + (Math.random()*1000)
+  after {delay:500} ^{ rootLayer.frame.x = (Math.random()*500).toFixed 0 }
+  after {delay:700} ^{ rootLayer.frame.y = (Math.random()*200).toFixed 0 }
+  after {delay:1000} ^{ rootLayer.scale = 0.2 + (Math.random()*2) }
+  after {delay:1500} animateRootLayer
+}
+after {delay:3000} animateRootLayer
+
+    
+    </script>
+    <style>
+      * { margin:0; padding:0; border:none; }
+      html {
+        background: black url(checker-pattern.png) repeat scroll top left;
+        color: white;
+        font-family: "Helvetica";
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body></body>
+</html>

@@ -3,9 +3,10 @@
   <head>
     <meta charset="utf-8">
     <title>UILayer</title>
+    <meta name="viewport" content="width=880">
     <meta property="fb:admins" content="728642302">
     <meta name="description" content="API on top of the WebKit DOM for working with the concept of layers. High performance UI rendering and animation.">
-    <meta property="og:image" content="http://rsms.me/uilayer/examples/icon.png">
+    <meta property="og:image" content="examples/icon.png">
     <meta property="og:site_name" content="rsms.me">
     <script src="http://movelang.org/move-0.4.4.js"></script>
     <script>
@@ -288,120 +289,17 @@ var Showdown = {converter:function() {
   }
 }};
     </script>
-    <style>
-html {
-  background: white;
-  color: black;
-  font: 16px/1.4 helvetica, arial, sans-serif;
-}
-body {
-  display:block;
-  margin: 0 auto;
-  padding-bottom: 5em;
-  width: 800px;
-}
-
-h1,h2,h3,h4,h5 {
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizelegibility;
-  margin-top:1.618em;
-}
-
-h1 { color: #333; }
-h2 { color: #222; }
-h3 { color: #333; }
-h4 { color: #666; }
-
-a:link, a:active, a:visited { color: #0D2681; text-decoration:none; }
-a { text-decoration:none; }
-a:link, a:active { color:#316d96; }
-a:visited { color:#7e5494; }
-a:link:hover, a:active:hover, a:visited:hover { text-decoration:underline; }
-a:link:hover, a:active:hover { color:#006be4; }
-a:visited:hover { color:#af00cf; }
-a > img { margin-bottom:-1px; }
-a.img { border:none; background:transparent !important; }
-
-h1 a,h2 a,h3 a,h4 a,h5 a {
-  color:inherit !important;
-}
-
-blockquote {
-  border-left: 4px solid #E68E88;
-  padding-left: 1em;
-  margin-right: 1em;
-  margin:0 1em 0 0;
-  color: #664E4A;
-  font-style: italic;
-}
-code, pre {
-  font-family: menlo, monospace;
-  background-color: #f0f0f0;
-}
-code { color: inherit; }
-pre {
-  color: #555;
-  border-left: 2px solid #ddd;
-  font-weight: lighter;
-  padding: 1em;
-  line-height:1.4;
-}
-
-#content h1 {
-  text-align:center;
-  padding-top:1em;
-  margin-top:1em;
-}
-#content h1 a {
-  display:block;
-}
-
-h2 {
-  border-top: 2px solid #ddd;
-  padding-top:0.5em;
-  margin-top: 3em;
-}
-
-h3 {
-  font-family: menlo, monospace;
-  font-weight: normal;
-  color: black;
-  line-height:1.5;
-  padding:0;
-  display:inline-block;
-  border-radius: 4px;
-  -webkit-border-radius: 4px;
-  -moz-border-radius: 4px;
-  margin-bottom:0;
-}
-h3 a {
-  display: block;
-  text-indent:-2em;
-  padding:0.2em 0.4em;
-  padding-left:2.4em;
-  border-left: 0.2em solid #7B77E3;
-  margin-left:-0.6em;
-}
-h3 .dimmed {
-  color:#5260A1;
-}
-h3 a:hover {
-  text-decoration: none !important;
-  background: #F0F6FD;
-}
-
-.footnote { color: #525151; }
-.footnote:before { color: #525151; }
-.footnote:after { color: #525151; }
-div.footnotes { background: #F0F0F0; }
-
-    </style>
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Droid+Sans+Mono:normal" type="text/css">
+    <link rel="stylesheet" href="examples/style.css" type="text/css">
   </head>
   <body>
-<a href="http://github.com/rsms/uilayer"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://a248.e.akamai.net/assets.github.com/img/e6bef7a091f5f3138b8cd40bc3e114258dd68ddf/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub"></a>
+<a href="http://github.com/rsms/uilayer" id="github-banner"><img src="https://a248.e.akamai.net/assets.github.com/img/e6bef7a091f5f3138b8cd40bc3e114258dd68ddf/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" alt="Fork me on GitHub"></a>
     <h1 id="title-h1"><img src="examples/icon.png" width="248" height="70" alt="UILayer"></h1>
     <div id="content">
     </div>
+    <footer>UILayer is free software and <a href="https://github.com/rsms/uilayer">open source</a>
+under a <a href="LICENSE.txt" title="MIT license">permissive license</a>, created by <a href="http://rsms.me/">Rasmus Andersson</a>.
+    </footer>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
     <script>
 var content = document.getElementById('content');
@@ -413,8 +311,11 @@ $.ajax({
     console.error('Failed to load content:', a,b,c);
   },
   success: function (body) {
+    body = body.replace(/> Note: UILayer only works in WebKit-based environments.+/, 'NOTE_WEBKIT_COMPAT');
     var html = (new Showdown.converter()).makeHtml(body);
-    content.innerHTML = html.replace(/<h1[^>]+>.+<\/h1>/, '');
+    html = html.replace(/<h1[^>]+>.+<\/h1>/, '');
+    html = html.replace(/<p>[\r\n.]*NOTE_WEBKIT_COMPAT[\r\n.]*<\/p>/m, '<blockquote id="webkit-compat-note"></blockquote>');
+    content.innerHTML = html;
   
     if (typeof content.querySelectorAll === 'function') {
       Array.prototype.slice.call(content.querySelectorAll('h3 > a')).forEach(function (el) {
@@ -425,23 +326,36 @@ $.ajax({
   }
 });
 </script>
-<style type="text/css" media="screen">
-#logo {
-  cursor: default;
-}
-#logo div {
-  font: bold 50px/70px helvetica, arial, sans-serif;
-  text-align:center;
-}
-</style>
 <script type="text/move">
+
+# Code pretty printer
+v = document.getElementsByTagName 'pre'
+for (i=0,L=v.length; i < L; ++i) {
+  n = v.item i
+  a = n.getAttribute('class') || ''
+  if (a.indexOf('plain-text') != -1)
+    continue
+  if (n.firstChild && n.firstChild.nodeName == 'CODE')
+    n.setAttribute 'class', a+' prettyprint lang-mv'
+}
+script = document.createElement 'script'
+script.async = true
+script.src = "examples/prettify.js"
+document.getElementsByTagName('head')[0].appendChild script
+
+import UILayer
+
+webkitCompatNote = document.getElementById 'webkit-compat-note'
+if (!UILayer) {
+  webkitCompatNote.innerHTML = "<p>You are viewing through an incompatible browser. UILayer works with WebKit-based environments, such as web views on Apple iOS, OS X and Android or in web browsers like Google Chrome and Safari. The demos and examples presented on this site will not work in this browser.</p>"
+  return
+} else {
+  webkitCompatNote.parentNode.removeChild webkitCompatNote
+}
 
 # A fun little Logotype for visitors with WebKit browsers
 
-import UILayer
-if (!UILayer) return
-
-UILayer.debug = true;
+UILayer.debug = true
 rootLayer = UILayer { x:20, y:20, width:2, height:70, tag:'logo', backgroundColor:'transparent',
   perspective:1000, doubleSided:true, preserve3d:true }
 document.body.appendChild rootLayer.element

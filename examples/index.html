@@ -2,141 +2,144 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="format-detection" content="telephone=no">
-    <meta name="viewport" content="width=640,initial-scale=0.5,user-scalable=no">
-    <script src="http://movelang.org/move-0.4.4.js"></script>
-    <script>document.write('<'+'script src="../uilayer.js?'+(+new Date)+'"><'+'/script>');</script>
-    <script type="text/move">
-    
-import UILayer
-if (!UILayer) return alert 'Unsupported web view (UILayer only supports WebKit)'
-
-# Gives each layer a random background color
-UILayer.debug = true
-
-# Create our root layer and add it to the document
-rootLayer = UILayer { x:0, y:0, width: 320, height: 480, animated: true }
-print 'rootLayer ->', rootLayer
-document.body.appendChild rootLayer.element
-
-rootLayer.on 'uilayer:added-sublayer', ^(ev) {
-  print "rootLayer.on 'uilayer:added-sublayer' sublayer:", ev.sublayer }
-rootLayer.on 'uilayer:removed-sublayer', ^(ev) {
-  print "rootLayer.on 'uilayer:removed-sublayer' sublayer:", ev.sublayer }
-
-#rootLayer.masksToBounds = true
-
-print 'rootLayer.frame -> '+rootLayer.frame
-print 'JSON rootLayer.frame ->', JSON rootLayer.frame
-print 'rootLayer.frame enumerable keys -> '+Object.keys rootLayer.frame
-
-after {delay:500} ^{ rootLayer.frame.x = 200 }
-after {delay:700} ^{ rootLayer.frame.y = 200 }
-after {delay:900} ^{ rootLayer.frame.width = 340 }
-after {delay:2000} ^{ rootLayer.scale = 0.4 }
-
-print 'rootLayer ->', rootLayer
-
-animate = ^(layer, baseDelay){
-  layer.animationDuration = 100 + (Math.random()*1000)
-  after {delay:baseDelay+500} ^{ layer.frame.x = Math.random()*200 }
-  after {delay:baseDelay+700} ^{ layer.frame.y = Math.random()*200 }
-  after {delay:baseDelay+900} ^{ layer.frame.width = Math.random()*200 }
-  after {delay:baseDelay+950} ^{ layer.frame.height = Math.random()*200 }
-  after {delay:baseDelay+1000} ^{ layer.scale = 0.2 + (Math.random()*2) }
-  after {delay:baseDelay+1500} ^{
-    layer.scale = 0.2 + (Math.random()*2)
-    layer.frame.x = Math.random()*200
-    layer.frame.y = Math.random()*200
-    layer.frame.width = Math.random()*200
-    layer.frame.height = Math.random()*200
-    animate layer, 100
-  }
-}
-
-layer = rootLayer.addSublayer UILayer {x:10, y:10, width:50, height:50, animated:true}
-animate layer, 1000
-layer = rootLayer.addSublayer UILayer {x:15, y:15, width:50, height:50, animated:true}
-animate layer, 1100
-layer = rootLayer.addSublayer UILayer {x:20, y:20, width:50, height:50, animated:true}
-animate layer, 1200
-layer = rootLayer.addSublayer UILayer {x:25, y:25, width:50, height:50, animated:true}
-animate layer, 1300
-layer = rootLayer.addSublayer UILayer {x:30, y:30, width:50, height:50, animated:true}
-animate layer, 1400
-
-print 'layer.superlayer ->', layer.superlayer
-print 'layer.superlayer.superlayer ->', layer.superlayer.superlayer
-print 'layer.isSublayerOf rootLayer ->', layer.isSublayerOf rootLayer
-print 'rootLayer.isSublayerOf layer ->', rootLayer.isSublayerOf layer
-print 'rootLayer.removeSublayer ->', rootLayer.removeSublayer layer
-
-print 'rootLayer enumerable keys -> '+Object.keys rootLayer
-print 'JSON rootLayer ->', JSON rootLayer
-
-# Events
-# Touch events are routed as mouse events on non-touch platforms
-rootLayer.on 'touchstart', ^(ev){
-  print 'touchstart', ev.clientX, ev.clientY, ev
-  rootLayer.touchmoveListener = rootLayer.on 'touchmove', ^(ev){ print 'touchmove', ev }
-}
-rootLayer.on 'touchend', ^(ev){
-  print 'touchend', ev.clientX, ev.clientY, ev
-  print rootLayer.removeEventListener 'touchmove', rootLayer.touchmoveListener
-}
-
-rootLayer.touchesBegan = ^(ev){
-  print 'touchesBegan', ev.clientX, ev.clientY, ev
-  rootLayer.touchmoveListener = rootLayer.on 'touchmove', ^(ev){ print 'touchmove', ev }
-}
-rootLayer.touchesEnded = ^(ev){
-  print 'touchesEnded', ev.clientX, ev.clientY, ev
-  print rootLayer.removeEventListener 'touchmove', rootLayer.touchmoveListener
-}
-
-
-
-# Custom events
-rootLayer.on 'my-custom-event', ^(ev) { print 'my-custom-event triggered. args.foo =', ev.foo}
-rootLayer.emit 'my-custom-event', {foo:'arbitrary argument'}
-
-# Explicit depth
-layer1 = UILayer { x:0, y:0, width: 100, height: 100 }
-document.body.appendChild layer1.element
-print 'layer1.zPosition', layer1.zPosition
-print 'layer1.scale', layer1.scale
-print 'layer1.anchorPoint', layer1.anchorPoint
-layer1.zPosition = 2
-layer1.backgroundColor = '#f99'
-
-layer2 = UILayer { x:50, y:50, width: 100, height: 100 }
-document.body.appendChild layer2.element
-layer2.zPosition = 1
-layer2.backgroundColor = '#99f'
-
-
-animateRootLayer = ^{
-  rootLayer.animationDuration = 100 + (Math.random()*1000)
-  after {delay:500} ^{ rootLayer.frame.x = (Math.random()*500).toFixed 0 }
-  after {delay:700} ^{ rootLayer.frame.y = (Math.random()*200).toFixed 0 }
-  after {delay:1000} ^{ rootLayer.scale = 0.2 + (Math.random()*2) }
-  after {delay:1500} animateRootLayer
-}
-after {delay:3000} animateRootLayer
-
-    
-    </script>
-    <style>
-      * { margin:0; padding:0; border:none; }
-      html {
-        background: black url(checker-pattern.png) repeat scroll top left;
-        color: white;
-        font-family: "Helvetica";
-        font-size: 16px;
+    <title>UILayer examples</title>
+    <meta name="viewport" content="width=880">
+    <meta property="fb:admins" content="728642302">
+    <meta name="description" content="Examples of UILayer usage. UILayer is an API on top of the WebKit DOM for working with the concept of layers. High performance UI rendering and animation.">
+    <meta property="og:image" content="icon.png">
+    <meta property="og:site_name" content="rsms.me">
+    <link rel="stylesheet" href="style.css" type="text/css">
+    <style type="text/css">
+      body {
+        position:absolute;
+        top:0; right:0; bottom:0; left:0;
+        margin:0; width:auto;
+        padding-left:2em;
+        overflow:hidden;
+      }
+      #source {
+        position:absolute;
+        top:0; right:0; bottom:0;
+        width: 800px;
+        -webkit-backface-visibility: hidden;
+        -webkit-transition: -webkit-transform 300ms ease;
+        -webkit-transform: translate3d(822px,0,0);
+        background:#eee;
+        border-left:1px solid rgba(0,0,0,0.25);
+        -moz-box-shadow: 0px 0 20px rgba(0,0,0,0.4);
+        -webkit-box-shadow: 0px 0 20px rgba(0,0,0,0.4);
+        box-shadow: 0px 0 20px rgba(0,0,0,0.4);
+      }
+      #source.open {
+        -webkit-transform: translate3d(0,0,0);
+      }
+      #source > pre {
+        position:absolute;
+        top:36px; right:0; bottom:0; left:0;
+        -webkit-transition: opacity 200ms ease;
+        opacity: 0;
+        border:none;
+        margin:0;
+        overflow: auto;
+      }
+      #source > h4 {
+        line-height:26px;
+        margin:5px 0 1em 0;
+        border-bottom:1px solid #ccc;
+        text-align:center;
+        padding-bottom:4px;
+      }
+      #source .close {
+        display:block;
+        position:absolute;
+        top:5px; left:5px;
+        width:24px; height:24px;
+        font: 20px/24px helvetica,arial,sans-serif;
+        text-decoration:none;
+        cursor:default;
+        color:#666;
+        vertical-align:bottom;
+        text-align:center;
+        -mox-border-radius:4px;
+        -webkit-border-radius:4px;
+        border-radius:4px;
+      }
+      #source .close:hover {
+        background:#ccc;
+        color:black;
       }
     </style>
+    <script src="prettify.js"></script>
   </head>
-  <body></body>
+  <body>
+    <h1><a href="../">UILayer</a> <span style="color:#ccc">❯</span> Examples</h1>
+    <ul>
+      <li>anchorPoint.html</li>
+      <li>animate-combo.html</li>
+      <li>debug.html</li>
+      <li>flip-book.html</li>
+      <li>hitTest.html</li>
+      <li>masksToBounds.html</li>
+      <li>perspective.html</li>
+      <li>subclassing.html</li>
+      <li>tag.html</li>
+    </ul>
+    <div id="source"><h4></h4><pre class="prettyprint lang-html"></pre><a title="Close" class="close" href="javascript:closeSource()">×</a></div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+    <script>
+      function viewSource(path) {
+        var sourcePane = document.getElementById('source');
+        var title = sourcePane.childNodes[0];
+        var pre = sourcePane.childNodes[1];
+        sourcePane.className = 'open';
+        pre.style.opacity = '0'
+        title.innerText = path;
+        pre.innerText = '';
+        $.get(path+'?'+(+new Date), function (body) {
+          
+          // skip outer
+          var lang = 'html';
+          if (body.match(/<body>\s*<\/body>/)) {
+            var start, end, v = body.split('<'+'script type="text/move">');
+            console.log('v1', v.length);
+            if (v.length === 2) {
+              v = v[1].split('<'+'/script>');
+              body = v[0];
+              body = body.replace(/^[\s\r\n]+/m, '');
+              console.log('v2', v.length);
+              //if ((start = body.indexOf()))
+              lang = 'mv';
+            }
+          }
+
+          // hacky and ugly, but feels kind of nice...
+          setTimeout(function(){
+            pre.style.opacity = '1'
+            pre.innerText = body;
+            pre.className = 'prettyprint lang-'+lang
+            prettyPrint();
+          }, 200);
+          
+
+        });
+      }
+    
+      function closeSource() {
+        var sourcePane = document.getElementById('source');
+        sourcePane.className = '';
+      }
+    
+      var i, url, li, ul = document.getElementsByTagName('ul')[0];
+      for (i = 0; i < ul.childNodes.length; ++i) {
+        if ( (li = ul.childNodes[i]) && (li.nodeType === Node.ELEMENT_NODE) ) {
+          url = li.innerText;
+          html = '<a href="'+url+'">'+url+'</a>'
+          //if (navigator.userAgent.indexOf('Chrome') !== -1) {
+            html += ' &nbsp; (<a href="javascript:viewSource(\''+url+'\')">view source</a>)';
+          //}
+          li.innerHTML = html
+        }
+      }
+    </script>
+  </body>
 </html>

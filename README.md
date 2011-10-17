@@ -3,15 +3,30 @@
 UILayer provides an API on top of the WebKit DOM **for working with the concept of layers**. Instead of manipulating DOM elements using a myriad of mixed concepts, you go though a single, well defined API.
 
 
-## Examples
+## Demo and example
 
-- [Psychotic layers randomly moving around inside another layer](http://rsms.me/uilayer/examples/)
+- [Psychotic layers randomly moving around](http://rsms.me/uilayer/examples/animate-combo.html)
 - [Flip some pages in the Flip Book](http://rsms.me/uilayer/examples/flip-book.html)
-
-See the ["examples" directory in the source repository](https://github.com/rsms/uilayer/tree/master/examples) for more examples.
+- [Interactive 3D perspective](http://rsms.me/uilayer/examples/perspective.html)
+- [More demos in /examples/...](http://rsms.me/uilayer/examples/)
 
 > Note: UILayer only works in WebKit-based environments, such as web views on Apple iOS, OS X and Android or in web browsers like Google Chrome and Safari.
 
+Here's a simple example: A layer inside another layer which moves 50px to the right when touched, rotating the inner layer like a wheel:
+
+<div>
+<pre class="plain-text"><code>layer1 = <a href="#api">UILayer</a>({ x:10, y:10, width:300, height:300, <a href="#animation">animated</a>:true });
+layer2 = <a href="#api">UILayer</a>({ x:50, y:50, width:200, height:200, <a href="#animation">animated</a>:true });
+layer1.<a href="#layer-hierarchy">addSublayer</a>(layer2);
+layer1.<a href="#style-attributes">backgroundColor</a> = 'hotpink'
+layer1.<a href="#handling-events">on('touchstart'</a>, function () {
+  layer1.<a href="#geometry">frame</a>.x += 50
+  layer2.<a href="#geometry">rotateBy</a> 10
+});
+document.body.appendChild(layer1.<a href="#dom">element</a>)</code></pre>
+</div>
+
+[Try it →](http://rsms.me/uilayer/examples/example1.html)
 
 ## Usage
 
@@ -204,7 +219,8 @@ Example:
     layer.animated = true
     layer.animationTimingFunction = 'ease-out'
     layer.frame.x = 100
-    # Layer moves 100 px to the right during 500ms, slowing down in the end
+    # Layer moves 100 px to the right during 500ms,
+    # slowing down in the end
 
 
 ## Layer hierarchy
