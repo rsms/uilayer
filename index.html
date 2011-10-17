@@ -359,6 +359,15 @@ UILayer.debug = true
 rootLayer = UILayer { x:20, y:20, width:2, height:70, tag:'logo', backgroundColor:'transparent',
   perspective:1000, doubleSided:true, preserve3d:true }
 document.body.appendChild rootLayer.element
+rootLayer.perspective = 400
+didInitiateRandomly = false
+
+initiateRandomly = ^(layer, isSublayer) {
+  layer.moveBy 0, 0, (Math.random()*60)-30
+  if (isSublayer)
+    layer.rotateBy((Math.random()*20)-10, (Math.random()*20)-10, (Math.random()*20)-10)
+  layer.sublayers.forEach ^(sublayer) { initiateRandomly sublayer, true }
+}
 
 addLetter = ^(letter, width, previousLayer) {
   layer = (previousLayer || rootLayer).addSublayer UILayer {
@@ -385,6 +394,10 @@ addLetter = ^(letter, width, previousLayer) {
   }
   
   layer.on 'touchstart', ^(ev) {
+    if (!didInitiateRandomly) {
+      initiateRandomly rootLayer
+      didInitiateRandomly = true
+    }
     @rotateBy((Math.random()*20)-10, (Math.random()*20)-10, (Math.random()*20)-10)
     @moveBy((Math.random()*10)-5, (Math.random()*10)-5, (Math.random()*10)-5)
     #@scale *= (0.9 + (Math.random()*0.2))

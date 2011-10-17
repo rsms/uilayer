@@ -17,14 +17,14 @@ UILayer.debug = true
 rootLayer = UILayer { x:window.innerWidth-310, y:50, width:1, height:500, animated:'transform' }
 document.body.appendChild rootLayer.element
 
-rootLayer.style.webkitPerspective = 1000
+rootLayer.perspective = 1000
 spacingBetweenPages = 3
 
 addPageAfterPage = ^(previousPage) {
   superlayer = previousPage || rootLayer
   page = superlayer.addSublayer UILayer { x:0, y:0, width:300, animated:true, className:'page' }
   page.anchorPoint = [0,0]
-  page.style.webkitPerspective = superlayer.style.webkitPerspective
+  page.perspective = superlayer.perspective
   
   pageNumber = 1
   
