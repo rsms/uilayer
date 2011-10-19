@@ -397,7 +397,7 @@ If you just want to know if a layer is visible or not, see [`layer.hidden`](http
 
 ### layer.on(type:string, handler:^(event)) → handler
 
-Register *handler* to be triggered each time *event* is emitted on the receiving layer. *type* can be any string, including DOM Level 3 official events and custom, arbitrary events.
+Register *handler* to be triggered each time *event* is emitted on the receiving layer. *type* can be any string, including [DOM Level 3 events](http://www.w3.org/TR/DOM-Level-3-Events/) and custom, arbitrary events.
 
 ### layer.removeEventListener(type:string, handler:^(event)) → bool
 
@@ -408,7 +408,7 @@ Remove an event handler.
 
 Emit (or: trigger/raise/send) an event on the receiving layer.
 
-*type* can be any string, including DOM Level 3 official events and custom, arbitrary events. All arguments or options (in positional call-style) except "type" will be added to the event object that is then sent to all listening event handlers.
+*type* can be any string, including [DOM Level 3 events](http://www.w3.org/TR/DOM-Level-3-Events/) and custom, arbitrary events. All arguments or options (in positional call-style) except "type" will be added to the event object that is then sent to all listening event handlers.
 
 Example:
 
