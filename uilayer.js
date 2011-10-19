@@ -1,14 +1,3 @@
-Move.require.define("UILayer","UILayer/index.mv",function(require,module,exports){
-  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, version;
-  M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
-  EHTML = Move.EHTML;
-  if (typeof window === "undefined" || !window.navigator || window.navigator.userAgent.indexOf("WebKit") === -1) {
-    module.exports = null;
-    return print("Error: UILayer is only compatible with WebKit");
-  }
-  module.exports = exports = require("./UILayer");
-  exports.version = version = "0.0.6";
-});
 Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,module,exports){
   var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, mkCSSPixelValueProperty, UIFrame;
   M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
@@ -37,7 +26,9 @@ Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,modu
         } else {
           this.layer.element.style.setProperty(name, Text(value), null);
         }
-        if (!this.layer.eventsMuted) return this.layer.emit("change:frame", oldValues);
+        if (!this.layer.eventsMuted) return this.layer.emit("change:frame", {
+          oldValues: oldValues
+        });
       }
     };
   };
@@ -1266,6 +1257,17 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   if ((head = document.getElementsByTagName("head")).length) head = head[0]; else head = document.body || document.documentElement;
   baseStyle = document.createElement("style");
   baseStyle.id = "UILayer-base-style";
-  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  visibility: visible;" + "  position: absolute;" + "  top:auto; right:auto; bottom:auto; left:auto;" + "  width:auto; height:auto;" + "  overflow: visible;" + "  z-index:0;" + "  opacity:1;" + "}\n" + ".uilayer.textureBacked {" + "  -webkit-transform: matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);" + "  -webkit-transform-origin: 50% 50% 0%;" + "  -webkit-backface-visibility: hidden;" + "  -webkit-transform-style: flat;" + "}\n" + ".uilayer.animated {" + "  -webkit-transition-duration: 500ms;" + "  -webkit-transition-timing-function: ease;" + "  -webkit-transition-delay: 0;" + "  -webkit-transition-property: none;" + "}"));
+  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  visibility: visible;" + "  position: absolute;" + "  top:auto; right:auto; bottom:auto; left:auto;" + "  width:auto; height:auto;" + "  overflow: visible;" + "  z-index:0;" + "  opacity:1;" + "  -webkit-box-sizing: border-box;" + "}\n" + ".uilayer.textureBacked {" + "  -webkit-transform: matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);" + "  -webkit-transform-origin: 50% 50% 0%;" + "  -webkit-backface-visibility: hidden;" + "  -webkit-transform-style: flat;" + "}\n" + ".uilayer.animated {" + "  -webkit-transition-duration: 500ms;" + "  -webkit-transition-timing-function: ease;" + "  -webkit-transition-delay: 0;" + "  -webkit-transition-property: none;" + "}"));
   return head.appendChild(baseStyle);
+});
+Move.require.define("UILayer","UILayer/index.mv",function(require,module,exports){
+  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, version;
+  M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
+  EHTML = Move.EHTML;
+  if (typeof window === "undefined" || !window.navigator || window.navigator.userAgent.indexOf("WebKit") === -1) {
+    module.exports = null;
+    return print("Error: UILayer is only compatible with WebKit");
+  }
+  module.exports = exports = require("./UILayer");
+  exports.version = version = "0.0.6";
 });
