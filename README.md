@@ -314,9 +314,13 @@ Example: [examples/drawContent.html](http://rsms.me/uilayer/examples/drawContent
 
 The 2D drawing context for a layer with a `drawContent` implementation.
 
+See [HTML Canvas 2D Context](http://www.w3.org/TR/2dcontext/) for reference.
+
 ### layer.graphicsContext3D → CanvasRenderingContext3D
 
 The 3D (WebGL) drawing context for a layer with a `drawContent` implementation.
+
+See [WebGL Specification](http://www.khronos.org/registry/webgl/specs/latest/) for reference.
 
 
 ## Layer hierarchy
