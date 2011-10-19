@@ -33,11 +33,7 @@ DEPRECATED_PROPERTY = ^(oldName, newName) {return {get: ^{
 }}}
 
 _canonicalColor = ^(color) {
-  if (!(isArray = Array.isArray(color)) && typeof color == 'object') {
-    color = [color.r, color.g, color.b, color.a]
-    isArray = true
-  }
-  if (isArray) {
+  if (Array.isArray isArray) {
     if (color.length == 1) {
       # monochrome, no alpha
       color = [color,color,color]
@@ -401,19 +397,16 @@ UILayer.properties = {
 
   backgroundColor: {
     get: ^{
-      color = @computedStyle.backgroundColor
-      if (color == 'transparent') color = null
-      color
+      ((color = @computedStyle.backgroundColor) == 'transparent') ? null : color
     },
     set: ^(color) {
-      color = _canonicalColor color
-      @element_.style.backgroundColor = color
+      @element_.style.backgroundColor = _canonicalColor color
     },
   },
 
   color: {
-    get: ^{ @computedStyle.color },
-    set: ^(color) { @element_.style.color = color },
+    get: ^{ ((color = @computedStyle.color) == 'transparent') ? null : color },
+    set: ^(color) { @element_.style.color = _canonicalColor color },
   },
 
   hidden: {

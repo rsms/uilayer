@@ -155,9 +155,27 @@ Note: cornerRadius does not affect hit testing.
 
 The background color of the layer. Defaults to "transparent" (no background color).
 
+Accepts any [CSS 3 color value](http://www.w3.org/TR/css3-color/) as a string, including:
+
+- [`"#000000-#ffffff"` or `"#000-#fff"`](http://www.w3.org/TR/css3-color/#numerical)
+- [`"rgb(0-255, 0-255, 0-255)"`](http://www.w3.org/TR/css3-color/#rgb-color)
+- [`"rgba(0-255, 0-255, 0-255, 0-1)"`](http://www.w3.org/TR/css3-color/#rgba-color)
+- [`"hsl(0-359, 0-100%, 0-100%)"`](http://www.w3.org/TR/css3-color/#hsl-color)
+- [`"hsl(0-359, 0-100%, 0-100%, 0-1)"`](http://www.w3.org/TR/css3-color/#hsla-color)
+- [`"red"`, `"salmon"`, `"transparent"`, ...](http://www.w3.org/TR/css3-color/#svg-color)
+
+Also accepts (but will canonicalize) arrays of relative RGBA values:
+
+- R, G, B, A -- `[0-1, 0-1, 0-1, 0-1]`
+- R, G, B -- `[0-1, 0-1, 0-1]`
+- RGB, A -- `[0-1, 0-1]`
+- RGB -- `[0-1]`
+
 ### layer.color ⇄ string
 
 Foreground (text) color of the layer. Defaults to the inherited value (from the environment, i.e. default browser style or host website style).
+
+Accepts any [CSS 3 color value](http://www.w3.org/TR/css3-color/) as a string. See description of [`layer.backgroundColor`](#layer.backgroundcolor-string) for more information.
 
 ### layer.opacity ⇄ number [0-1]
 
