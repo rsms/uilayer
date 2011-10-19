@@ -56,6 +56,38 @@ The returned `UIFrame` object is a mutable proxy which when modified affects the
 Providing a width and/or height of 0 (zero) makes the layer span the width and/or height of it's parent.
 
 
+### layer.anchor ⇄ object | string
+
+Layer anchor defined in superlayer coordinates controls which edges of the superlayer the layer is attached to, or originates from. Defaults to `{top:0, left:0}`.
+
+This property always returns an object (never a string) which might contain any or none of the following values:
+
+    { top:number|string, right::number|string,
+      bottom:number|string, left:number|string}
+
+If a value is undefined, that edge is not part of the layers anchor.
+
+Example of having a layer originating from the bottom right corner of its superview:
+
+    layer.anchor = 'bottom right'
+    print layer.anchor  # -> { bottom: 0, right: 0 }
+
+Example of having a layer originating from the bottom right corner of its superview with an offset of 20 pixels:
+
+    layer.anchor = {bottom:20, right:20}
+    print layer.anchor  # -> { bottom: 20, right: 0 }
+
+Example of making a layer span the entire width of its superlayer, automatically being resized as the superlayer's frame size changes (note that we do not specify a frame size):
+
+    layer = UILayer {anchor:'top right bottom left'}
+
+Example of creating a layer that spans the width of its superlayer, attached to the bottom:
+
+    layer = UILayer {anchor:'left bottom right', height:100}
+
+Example: [examples/anchor.html](http://rsms.me/uilayer/examples/anchor.html)
+
+
 ### layer.scale ⇄ number (0-inf]
 
 Scale of the layer. Defaults to 1.0 (100%).
@@ -76,13 +108,13 @@ Modify position of the layer.
 Modify rotation of the layer. Degrees are expressed as [0-360].
 
 
-### layer.anchorPoint ⇄ [x, y, z]
+### layer.transformOrigin ⇄ [x, y, z]
 
-Defines the anchor point of the layer's bounds rectangle. Animatable.
+Defines the transformation origin of the layer's bounds rectangle. Affects how transformations like scale and rotation behaves. Animatable.
 
-Described in the unit coordinate space. The value of this property is specified in points. Defaults to (0.5, 0.5, 0), the center of the bounds rectangle.
+Described in the unit coordinate space. Defaults to (0.5, 0.5, 0), the center of the bounds rectangle.
 
-Example: [examples/anchorPoint.html](http://rsms.me/uilayer/examples/anchorPoint.html)
+Example: [examples/transformOrigin.html](http://rsms.me/uilayer/examples/transformOrigin.html)
 
 
 ### layer.zPosition ⇄ number
@@ -222,6 +254,40 @@ Example:
     layer.frame.x = 100
     # Layer moves 100 px to the right during 500ms,
     # slowing down in the end
+
+
+
+
+## Custom drawing
+
+### layer.drawContent ⇄ ^{...}
+
+Provide a function to perform custom drawing of the layer's content. This function will be invoked every time the frame size changes or the layer is added to the DOM.
+
+> Note: A layer that implements custom drawing can not have sublayers.
+
+Example of drawing a triangle:
+
+    layer = UILayer {width:300, height:300, drawContent:^{
+      g = @graphicsContext2D
+      g.strokeStyle = 'red'
+      g.moveTo 50,50
+      g.lineTo 250,50
+      g.lineTo 150,250
+      g.lineTo 50,50
+      g.stroke()
+    }}
+
+Example: [examples/drawContent.html](http://rsms.me/uilayer/examples/drawContent.html)
+
+
+### layer.graphicsContext2D → CanvasRenderingContext2D
+
+The 2D drawing context for a layer with a `drawContent` implementation.
+
+### layer.graphicsContext3D → CanvasRenderingContext3D
+
+The 3D (WebGL) drawing context for a layer with a `drawContent` implementation.
 
 
 ## Layer hierarchy

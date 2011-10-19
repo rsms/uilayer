@@ -14,6 +14,24 @@ if (!document.documentElement || document.documentElement.classList) {
   }
 }
 
+DEPRECATED = ^(oldName, newName) {^{
+  console.warn oldName+' is deprecated.'+(newName ? ' Use '+newName+' instead.' : '')
+}}
+DEPRECATED_PROPERTY_WARNINGS = {}
+DEPRECATED_PROPERTY = ^(oldName, newName) {return {get: ^{
+  if (!DEPRECATED_PROPERTY_WARNINGS['get '+oldName]) {
+    console.warn oldName+' is deprecated.'+(newName ? ' Use '+newName+' instead.' : '')
+    DEPRECATED_PROPERTY_WARNINGS['get '+oldName] = true
+  }
+  this[newName]
+}, set: ^(value) {
+  if (!DEPRECATED_PROPERTY_WARNINGS['set '+oldName]) {
+    console.warn oldName+' is deprecated.'+(newName ? ' Use '+newName+' instead.' : '')
+    DEPRECATED_PROPERTY_WARNINGS['set '+oldName] = true
+  }
+  this[newName] = value
+}}}
+
 _canonicalColor = ^(color) {
   if (!(isArray = Array.isArray(color)) && typeof color == 'object') {
     color = [color.r, color.g, color.b, color.a]
@@ -34,16 +52,45 @@ _canonicalColor = ^(color) {
   color
 }
 
+_swapElement = ^(parentNode, oldElement, newElement, deep){
+  newAttrs = newElement.attributes
+  # Copy attributes
+  oldAttributes = oldElement.attributes
+  Array.prototype.slice.call(oldAttributes).forEach ^(attr) {
+    oldAttributes.removeNamedItem attr.name
+    newAttrs.setNamedItem attr
+  }
+  # Transfer child nodes
+  if (deep) {
+    Array.prototype.forEach.call oldElement.childNodes, ^(childNode) {
+      newElement.appendChild childNode
+    }
+  }
+  # Replace
+  if (parentNode) {
+    parentNode.replaceChild newElement, oldElement
+  }
+
+  otherUILayer = newElement.UILayer
+  newElement.UILayer = oldElement.UILayer
+  oldElement.UILayer = otherUILayer
+
+  newElement
+}
+
+
 kSpecialProperties = {element:1, debug:1, x:1, y:1, width:1, height:1, className:1, ownerDocument:1}
 
 module.exports = UILayer = class {
   constructor: ^{
     # keyword arguments or an object as the first argument are explicit values
     kwargs = typeof arguments[0] == 'object' ? arguments[0] : arguments.keywords || {}
+
     # Setup element
     element = kwargs.element
-    if (!element || typeof element != 'object' || !(element instanceof HTMLElement))
-      element = (kwargs.ownerDocument || document).createElement 'div'
+    if (!element || typeof element != 'object' || !(element instanceof HTMLElement)) {
+      element = (kwargs.ownerDocument || document).createElement kwargs.drawContent ? 'canvas' : 'div'
+    }
     element.UILayer = this
     kwargs.element = undefined
     addClassName element, 'uilayer'
@@ -51,12 +98,13 @@ module.exports = UILayer = class {
       addClassName element, @className
     if (kwargs.className)
       addClassName element, kwargs.className
-  
+
     # Store element as a read-only value property
-    Object.defineProperties this, {element: {value:element}}
-    
+    @element_ = element
+    Object.defineProperties this, {element: {enumerable:true, get: ^{ @element_ }}}
+
     # 3D-backed
-    addClassName @element, 'textureBacked'
+    addClassName @element_, 'textureBacked'
     @_is3DBacked = true
 
     # Special properties
@@ -67,12 +115,29 @@ module.exports = UILayer = class {
     # Debug adds a random background color
     if (kwargs.debug || (kwargs.debug == undefined && UILayer.debug))
       element.style.backgroundColor = 'hsla('+(Math.random()*359)+', 90%, 90%, 0.5)'
-  
+
+    # Anchor must be set
+    if (!kwargs.anchor) {
+      element.style.left = '0'
+      element.style.top = '0'
+    }
+
     # Set any remaining properties
     Object.prototype.forEach.call kwargs, ^(key, value) {
       if (value != undefined && value != _MoveKWArgsT && !(key in kSpecialProperties))
         this[key] = value
     }, this
+  },
+
+
+  # Used by drawContent
+  drawContentAfterFrameSizeChange: ^(oldValues) {
+    if (!oldValues || 'width' in oldValues || 'height' in oldValues) {
+      # This is needed to get a properly sized drawing buffer. Probably a WebKit bug.
+      @element_.width = @frame.width
+      @element_.height = @frame.height
+      @drawContent_()
+    }
   }
 }
 
@@ -113,39 +178,39 @@ UILayer.properties = {
   is3DBacked: { get: ^{ !!@_is3DBacked } },
 
   sublayers: {
-    get: ^{ UILayer.layersInElement @element },
+    get: ^{ @drawContent_ ? [] : UILayer.layersInElement @element_ },
     set: ^(sublayers) {
       if (!Array.isArray sublayers)
         throw TypeError 'sublayers argument must be an array of UILayers'
-      @sublayers.forEach ^(sublayer) { @element.removeChild sublayer }
+      @sublayers.forEach ^(sublayer) { @element_.removeChild sublayer }
       sublayers.forEach ^(sublayer) { @addSublayer sublayer }, this
     }
   },
-  
+
   firstSublayer: {
-    get: ^{ UILayer.firstLayerInElement @element }
+    get: ^{ @drawContent_ ? undefined : UILayer.firstLayerInElement @element_ }
   },
-  
+
   superlayer: {
     get: ^{
-      (pel = @element.parentNode) && pel.UILayer && UILayer.prototype.isPrototypeOf(pel.UILayer) && pel.UILayer
+      (pel = @element_.parentNode) && pel.UILayer && UILayer.prototype.isPrototypeOf(pel.UILayer) && pel.UILayer
     }
   },
-  
+
   # -------------------------------------------------------------------------------------------
   # Style Attributes
-  
+
   perspective: {
     get: ^{
       (v = @style.getPropertyCSSValue '-webkit-perspective') &&
         v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 0
     },
-    set: ^(distance) { @element.style.webkitPerspective = distance || 'none' },
+    set: ^(distance) { @element_.style.webkitPerspective = distance || 'none' },
   },
-  
+
   perspectiveOrigin: {
     get: ^{
-      style = @element.style
+      style = @element_.style
       [ (v = style.getPropertyCSSValue '-webkit-perspective-origin-x')
           && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || 0.5) / 100,
         (v = style.getPropertyCSSValue '-webkit-perspective-origin-y')
@@ -156,23 +221,66 @@ UILayer.properties = {
     set: ^(distance) {
       if (Array.isArray distance)
         distance = (distance[0]*100)+'% '+((distance[1] || 0.5)*100)+'% '+((distance[2] || 0)*100)+'%'
-      @element.style.webkitPerspectiveOrigin = distance
+      @element_.style.webkitPerspectiveOrigin = distance
     },
   },
-  
+
   preserve3d: {
     get: ^{
-      @element.style.webkitTransformStyle == 'preserve-3d'
+      @element_.style.webkitTransformStyle == 'preserve-3d'
     },
     set: ^(preserve3d) {
       if (preserve3d) {
-        @element.style.setProperty '-webkit-transform-style', 'preserve-3d', null
+        @element_.style.setProperty '-webkit-transform-style', 'preserve-3d', null
       } else {
-        @element.style.removeProperty '-webkit-transform-style'
+        @element_.style.removeProperty '-webkit-transform-style'
       }
     },
   },
-  
+
+  anchor: {
+    get: ^{
+      anchor = {}
+      style = @style
+      readValue = ^(name) {
+        if ((v = style.getPropertyCSSValue name) && v.primitiveType != CSSPrimitiveValue.CSS_IDENT) {
+          anchor[name] = (v.primitiveType == CSSPrimitiveValue.CSS_PX) ?
+            v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) : v.cssText
+        }
+      }
+      readValue 'left'
+      readValue 'top'
+      readValue 'right'
+      readValue 'bottom'
+      anchor
+    },
+    set: ^(anchor) {
+      t = r = b = l = undefined
+      if (typeof anchor == 'string') {
+        anchor.split(/\s+/).forEach ^(word) {
+          switch (word[0].toLowerCase()) {
+            case 'b': b = '0'; break
+            case 'l': l = '0'; break
+            case 'r': r = '0'; break
+            case 't': t = '0'; break
+          }
+        }
+      } else if (typeof anchor == 'object') {
+        if ((t = anchor.top) && (typeof t == 'number')) t += 'px'
+        if ((r = anchor.right) && (typeof r == 'number')) r += 'px'
+        if ((b = anchor.bottom) && (typeof b == 'number')) b += 'px'
+        if ((l = anchor.left) && (typeof l == 'number')) l += 'px'
+      } else if (!anchor) {
+        throw TypeError 'Value of anchor must be a string or object'
+      }
+      style = @style
+      (t == undefined) ? style.removeProperty('top') : style.top = t
+      (r == undefined) ? style.removeProperty('right') : style.right = r
+      (b == undefined) ? style.removeProperty('bottom') : style.bottom = b
+      (l == undefined) ? style.removeProperty('left') : style.left = l
+    }
+  },
+
   frame: {
     # frame is an object with {x, y, width, height}
     get: ^{
@@ -185,10 +293,14 @@ UILayer.properties = {
     set: ^(frame) {
       if (typeof frame != 'object') throw TypeError 'not an object'
       frame_ = @frame
+      @eventsMuted = true
+      oldValues = {width:frame.width, height:frame.height}
       frame.forEach ^(name, value) { frame_[name] = value }
+      @eventsMuted = false
+      @emit 'change:frame', oldValues
     }
   },
-  
+
   computedBounds: {
     get: ^{
       style = @computedStyle
@@ -206,53 +318,50 @@ UILayer.properties = {
       bounds
     }
   },
-  
-  # -------------------------------------------------------------------------------------------
-  # Style Attributes
 
   computedStyle: {
-    get: ^{ window.getComputedStyle @element }
+    get: ^{ window.getComputedStyle @element_ }
   },
-  
+
   style: {
-    get: ^{ @element.style },
+    get: ^{ @element_.style },
     set: ^(style) {
-      style_ = @element.style
+      style_ = @element_.style
       style.forEach ^(k, v) { style_[k] = v }
     },
   },
-  
+
   classNames: {
-    get: ^{ classNames @element },
+    get: ^{ classNames @element_ },
     set: ^(cssClassNames) {
       if (Array.isArray cssClassNames)
         cssClassNames = cssClassNames.join ' '
-      @element.className = cssClassNames
+      @element_.className = cssClassNames
     }
   },
-  
+
   doubleSided: {
-    get: ^{ @element.style.webkitBackfaceVisibility == 'visible' },
+    get: ^{ @element_.style.webkitBackfaceVisibility == 'visible' },
     set: ^(doubleSided) {
       if (doubleSided) {
-        @element.style.setProperty '-webkit-backface-visibility', 'visible', null
+        @element_.style.setProperty '-webkit-backface-visibility', 'visible', null
       } else {
-        @element.style.removeProperty '-webkit-backface-visibility'
+        @element_.style.removeProperty '-webkit-backface-visibility'
       }
     },
   },
-  
+
   cornerRadius: {
     get: ^{ (v = @computedStyle.getPropertyCSSValue '-webkit-border-top-left-radius') && v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 0 },
     set: ^(value) {
       if (value && (value = Number value)) {
-        @element.style.webkitBorderRadius = value.toFixed(0)+'px'
+        @element_.style.webkitBorderRadius = value.toFixed(0)+'px'
       } else {
-        @element.style.webkitBorderRadius = null
+        @element_.style.webkitBorderRadius = null
       }
     }
   },
-  
+
   backgroundColor: {
     get: ^{
       color = @computedStyle.backgroundColor
@@ -261,48 +370,111 @@ UILayer.properties = {
     },
     set: ^(color) {
       color = _canonicalColor color
-      @element.style.backgroundColor = color
+      @element_.style.backgroundColor = color
     },
   },
-  
+
   color: {
     get: ^{ @computedStyle.color },
-    set: ^(color) { @element.style.color = color },
+    set: ^(color) { @element_.style.color = color },
   },
-  
+
   hidden: {
     get: ^{ @computedStyle.visibility == 'hidden' },
     set: ^(hidden) { @computedStyle.visibility = hidden ? 'hidden' : null },
   },
-  
+
   masksToBounds: {
     get: ^{ @computedStyle.overflow == 'hidden' },
     set: ^(clip) { @style.overflow = clip ? 'hidden' : null },
   },
-  
+
   opacity: {
     get: ^{ (v = @computedStyle.getPropertyCSSValue 'opacity') && v.getFloatValue CSSPrimitiveValue.CSS_NUMBER },
-    set: ^(opacity) { @element.style.opacity = Number opacity },
+    set: ^(opacity) { @element_.style.opacity = Number opacity },
   },
-  
+
   zPosition: {
     get: ^{ (v = @computedStyle.getPropertyCSSValue 'z-index') && v.getFloatValue CSSPrimitiveValue.CSS_NUMBER },
-    set: ^(value) { @element.style.zIndex = Number(value).toFixed 0 },
+    set: ^(value) { @element_.style.zIndex = Number(value).toFixed 0 },
   },
-  
+
+  # -------------------
+  # Custom drawing
+
+  drawContent: {
+    get: ^{ @drawContent_ },
+    set: ^(drawContentFunction) {
+      if (typeof drawContentFunction != 'function') {
+        # Stop drawing custom content
+        if (@drawContent_) {
+          if (!@_originalElement || typeof @_originalElement == 'string') {
+            newElement = @ownerDocument.createElement(@_originalElement || 'div')
+          } else {
+            newElement = @_originalElement
+          }
+          @element_ = _swapElement @element_.parentNode, @element_, newElement
+          @_originalElement = undefined
+          @removeEventListener 'change:frame', @drawContentAfterFrameSizeChange
+        }
+        @drawContent_ = undefined
+
+      } else if (!@drawContent_) {
+        @drawContent_ = drawContentFunction
+
+        # Start drawing custom content
+        if (@element_.nodeName != 'CANVAS') {
+          # Save a ref to original element so we can revert
+          @_originalElement = @element_.hasChildNodes() ? @element_ : @element_.nodeName
+          newElement = @ownerDocument.createElement 'canvas'
+          @element_ = _swapElement @element_.parentNode, @element_, newElement
+        }
+
+        # Call drawContent when our frame size changes
+        @on 'change:frame', @drawContentAfterFrameSizeChange
+
+        # Initial drawing
+        if (@document) {
+          @drawContentAfterFrameSizeChange()
+        } else {
+          @on 'DOMNodeInsertedIntoDocument', initialDrawContent = ^{
+            @drawContentAfterFrameSizeChange()
+            @removeEventListener 'DOMNodeInsertedIntoDocument', initialDrawContent
+          }
+        }
+
+      } else if (@drawContent_ != drawContentFunction) {
+        @drawContent_ = drawContentFunction
+
+        # Redraw
+        @drawContentAfterFrameSizeChange()
+      }
+
+    }
+  },
+
+  graphicsContext2D: {
+    get: ^{ @element_.getContext && @element_.getContext '2d' }
+  },
+
+  graphicsContext3D: {
+    get: ^{ @element_.getContext && @element_.getContext 'webgl' }
+  },
+
+
   # -------------------------------------------------------------------------------------------
   # Animation
-  
+
   animated: {
     get: ^{
-      if (!hasClassName @element, 'animated')
+      if (!hasClassName @element_, 'animated')
         return false
       @computedStyle.webkitTransitionProperty
     },
     set: ^(animated) {
       if (animated && animated != 'none') {
-        addClassName @element, 'animated'
-        
+        addClassName @element_, 'animated'
+
         if (animated == 'geometry') {
           animated = '-webkit-transform,width,height'
         } else if (animated == 'transform') {
@@ -312,11 +484,11 @@ UILayer.properties = {
         } else if (typeof animated != 'string') {
           animated = 'all'
         }
-        
-        @element.style.setProperty '-webkit-transition-property', animated, null
-      } else if (hasClassName @element, 'animated') {
-        removeClassName @element, 'animated'
-        @element.style.removeProperty '-webkit-transition'
+
+        @element_.style.setProperty '-webkit-transition-property', animated, null
+      } else if (hasClassName @element_, 'animated') {
+        removeClassName @element_, 'animated'
+        @element_.style.removeProperty '-webkit-transition'
       }
     }
   },
@@ -333,47 +505,47 @@ UILayer.properties = {
     set: ^(value) {
       if (typeof value != 'number') throw TypeError 'animationDuration must be a number'
       else if (value < 0) throw TypeError 'animationDuration must be a positive number'
-      @element.style.setProperty '-webkit-transition-duration', value.toFixed(0)+'ms', null
+      @element_.style.setProperty '-webkit-transition-duration', value.toFixed(0)+'ms', null
     }
   },
-  
+
   animationTimingFunction: {
     get: ^{
       if (v = @computedStyle.getPropertyCSSValue '-webkit-transition-timing-function')
         return v.cssText
     },
     set: ^(value) {
-      @element.style.setProperty '-webkit-transition-timing-function', value, null
+      @element_.style.setProperty '-webkit-transition-timing-function', value, null
     }
   },
-  
+
   # -------------------------------------------------------------------------------------------
   # DOM
-  
-  ownerDocument: { get: ^{ @element.ownerDocument } },
-  
+
+  ownerDocument: { get: ^{ @element_.ownerDocument } },
+
   document: {
     get: ^{
       ownerDocument = @ownerDocument
-      ownerDocument.documentElement.contains(@element) && ownerDocument
+      ownerDocument.documentElement.contains(@element_) && ownerDocument
     }
   },
-  
+
   # -------------------------------------------------------------------------------------------
   # Identification
-  
+
   tag: {
-    get: ^{ @element.id },
-    set: ^(tag) { @element.id = Text tag },
+    get: ^{ @element_.id },
+    set: ^(tag) { @element_.id = Text tag },
   },
-  
+
   excludedFromHitTesting: {
     get: ^{
-      @element.style.getPropertyValue('pointer-events') == 'none'
+      @element_.style.getPropertyValue('pointer-events') == 'none'
     },
     set: ^(isExcluded) {
-      if (isExcluded) @element.style.setProperty 'pointer-events', 'none', null
-      else @element.style.removeProperty 'pointer-events'
+      if (isExcluded) @element_.style.setProperty 'pointer-events', 'none', null
+      else @element_.style.removeProperty 'pointer-events'
     },
   },
 }
@@ -385,11 +557,11 @@ UILayer.properties = {
 UILayer.hitTest = ^(x, y) {
   if ((element = document.elementFromPoint x, y)) {
     # Find closest parent element that is controlled by a UILayer (including the target element)
-    
+
     # Implementation note: We do "el != element && ..." as an optimization. Any layer which have
     # its excludedFromHitTesting set to true will never be returned by document.elementFromPoint,
     # thus we only need to check excludedFromHitTesting for parent elements.
-    
+
     el = element
     while (!(UILayer.prototype.isPrototypeOf el.UILayer) || (el != element && el.UILayer.excludedFromHitTesting)) {
       if (!(el = el.parentNode))
@@ -404,15 +576,15 @@ UILayer.hitTest = ^(x, y) {
 UILayer.textureBackedProperties = {
   matrix: {
     get: ^{
-      @_matrix || (@_matrix = new WebKitCSSMatrix(@element.style.webkitTransform))
+      @_matrix || (@_matrix = new WebKitCSSMatrix(@element_.style.webkitTransform))
     },
     set: ^{
       M = @_matrix = arguments[0]
       if (!M || !(M instanceof WebKitCSSMatrix)) {
         @_matrix = null
-        @element.style.webkitTransform = null
+        @element_.style.webkitTransform = null
       } else {
-        @element.style.webkitTransform = 'matrix3d('+
+        @element_.style.webkitTransform = 'matrix3d('+
           M.m11+','+M.m12+','+M.m13+','+M.m14+','+
           M.m21+','+M.m22+','+M.m23+','+M.m24+','+
           M.m31+','+M.m32+','+M.m33+','+M.m34+','+
@@ -420,7 +592,7 @@ UILayer.textureBackedProperties = {
       }
     }
   },
-  
+
   # Scale [0-inf) -- 1.0 = 100%
   scale: {
     get: ^{
@@ -435,7 +607,7 @@ UILayer.textureBackedProperties = {
 
       if (value <= 0.0)
         throw TypeError 'scale must be larger than zero'
-      
+
       matrix = @matrix
       matrix.m11 = value
       matrix.m22 = value
@@ -443,69 +615,71 @@ UILayer.textureBackedProperties = {
       @matrix = matrix
     }
   },
-  
+
   rotateBy: { # rotX, rotY, rotZ (0-360)
     value: ^{
       matrix = @matrix
       @matrix = matrix.rotate.apply matrix, arguments
     }
   },
-  
+
   rotateAxisAngleBy: { # x, y, z, angle
     value: ^{
       matrix = @matrix
       @matrix = matrix.rotateAxisAngle.apply matrix, arguments
     }
   },
-  
+
   scaleBy: { # x, y, z (0-1)
     value: ^{
       matrix = @matrix
       @matrix = matrix.scale.apply matrix, arguments
     }
   },
-  
+
   moveBy: { # x, y, z (pixels)
     value: ^{
       matrix = @matrix
       @matrix = matrix.translate.apply matrix, arguments
     }
   },
-  
+
   # Origin for transformations (e.g. scaling) in the layer's own coordinates.
-  anchorPoint: {
+  transformOrigin: {
     get: ^{
       point = [0.5, 0.5, 0]
-      if (v = @element.style.getPropertyCSSValue '-webkit-transform-origin-x')
+      if (v = @element_.style.getPropertyCSSValue '-webkit-transform-origin-x')
         point[0] = v.getFloatValue(v.primitiveType)/100
-      if (v = @element.style.getPropertyCSSValue '-webkit-transform-origin-y')
+      if (v = @element_.style.getPropertyCSSValue '-webkit-transform-origin-y')
         point[1] = v.getFloatValue(v.primitiveType)/100
-      if (v = @element.style.getPropertyCSSValue '-webkit-transform-origin-z')
+      if (v = @element_.style.getPropertyCSSValue '-webkit-transform-origin-z')
         point[3] = v.getFloatValue(v.primitiveType)/100
       point
     },
     set: ^(origin) {
-      style = @element.style
-      
+      style = @element_.style
+
       if (origin[0] == 0.5 || origin[0] == undefined) {
         style.removeProperty '-webkit-transform-origin-x'
       } else {
         style.setProperty '-webkit-transform-origin-x', (100*origin[0]).toFixed(0)+'%', null
       }
-      
+
       if (origin[1] == 0.5 || origin[1] == undefined) {
         style.removeProperty '-webkit-transform-origin-y'
       } else {
         style.setProperty '-webkit-transform-origin-y', (100*origin[1]).toFixed(0)+'%', null
       }
-      
+
       if (origin[2] == 0 || origin[2] == undefined) {
         style.removeProperty '-webkit-transform-origin-z'
       } else {
         style.setProperty '-webkit-transform-origin-z', (100*origin[2]).toFixed(0)+'%', null
       }
     }
-  }
+  },
+
+  anchorPoint: DEPRECATED_PROPERTY('anchorPoint', 'transformOrigin'),
 }
 
 
@@ -529,22 +703,26 @@ UILayer.prototype._setupSublayer = ^(layer) {
 }
 
 UILayer.prototype.addSublayer = ^(layer) {
+  if (@drawContent_) {
+    console.warn 'adding sublayers to a layer with custom drawing has no effect'
+    return
+  }
   @_setupSublayer layer
-  @element.appendChild layer.element
+  @element_.appendChild layer.element
   layer.emit 'uilayer:added-to-superlayer', {superlayer:this}
   @emit 'uilayer:added-sublayer', {sublayer:layer}
   layer
 }
-  
+
 UILayer.prototype.removeSublayer = ^(layer, index) {
-  cn = @element.childNodes
+  cn = @element_.childNodes
   if (layer && UILayer.prototype.isPrototypeOf layer) {
     el = layer.element
   } else if (index && (index = Number index) >= 0 && !isNaN(index)) {
     el = cn.item index
   }
   if (el && el.UILayer && UILayer.prototype.isPrototypeOf el.UILayer) {
-    try { @element.removeChild el } catch (e) { return undefined }
+    try { @element_.removeChild el } catch (e) { return undefined }
     layer = el.UILayer
     layer.emit 'uilayer:removed-from-superlayer', {superlayer:this}
     @emit 'uilayer:removed-sublayer', {sublayer:layer}
@@ -555,19 +733,19 @@ UILayer.prototype.removeSublayer = ^(layer, index) {
 UILayer.prototype.removeFromSuperlayer = ^{
   if (!(superlayer = @superlayer))
     throw Error 'Not attached to any superlayer'
-  superlayer.element.removeChild @element
+  superlayer.element.removeChild @element_
   @emit 'uilayer:removed-from-superlayer', {superlayer:superlayer}
   superlayer.emit 'uilayer:removed-sublayer', {sublayer:this}
 }
 
 UILayer.prototype.removeAllSublayers = ^{
   removedSublayers = []
-  cn = @element.childNodes
+  cn = @element_.childNodes
   for (i=0; i < cn.length; ++i) {
     el = cn[i]
     if (el.UILayer && UILayer.prototype.isPrototypeOf el.UILayer) {
       removedSublayers.push el.UILayer
-      @element.removeChild el
+      @element_.removeChild el
     }
   }
   removedSublayers
@@ -580,31 +758,31 @@ UILayer.prototype.setSublayerAtIndex = ^(index, layer) {
     @_setupSublayer layer
 
   if (index && (index = Number index) >= 0 && !isNaN(index)) {
-    el = @element.childNodes.item index
+    el = @element_.childNodes.item index
     if (el && el.UILayer && UILayer.prototype.isPrototypeOf el.UILayer) {
       if (layer) {
         # Replace
-        @element.replaceChild layer.element, el
+        @element_.replaceChild layer.element, el
         layer.emit 'uilayer:added-to-superlayer', {superlayer:this}
         @emit 'uilayer:added-sublayer', {sublayer:layer}
       } else {
         # Remove
-        @element.removeChild el
+        @element_.removeChild el
       }
       el.UILayer.emit 'uilayer:removed-from-superlayer', {superlayer:this}
       @emit 'uilayer:removed-sublayer', {sublayer:el.UILayer}
       return el
     }
   }
-  
+
   # Add
-  @element.appendChild layer.element
+  @element_.appendChild layer.element
   layer.emit 'uilayer:added-to-superlayer', {superlayer:this}
   @emit 'uilayer:added-sublayer', {sublayer:layer}
 }
 
 
-  
+
 UILayer.prototype.superlayerInClassStructure = ^{  # class, class, ..
   #expectedClassStructure = [UILayer, ExpandoContent, ExpandoCell]
   expectedClassStructure = arguments
@@ -619,13 +797,13 @@ UILayer.prototype.superlayerInClassStructure = ^{  # class, class, ..
   }
   superlayer
 }
-  
+
 UILayer.prototype.isSublayerOf = ^(superlayer) {
-  superlayer && UILayer.prototype.isPrototypeOf(superlayer) && @element.parentNode == superlayer.element
+  superlayer && UILayer.prototype.isPrototypeOf(superlayer) && @element_.parentNode == superlayer.element
 }
-  
+
 UILayer.prototype.layerWithTag = UILayer.layerWithTag,
-  
+
 UILayer.prototype.toJSON = ^{
   obj = {frame: @frame, scale: @scale, origin: @origin}
   # Note: This is NOT meant to produce a complete rep, but rather a "hint" of the layer's state
@@ -671,7 +849,7 @@ if (!isTouchDevice) {
       callback.apply this, Array.prototype.slice.call arguments
     }
   }
-  
+
   UILayer.prototype.on = ^(type, handler) {
     if (compatType = touchEventsToMouseEvents[type]) {
       type = compatType
@@ -681,24 +859,24 @@ if (!isTouchDevice) {
     }
     layer = this
     eventHandler = ^{ handler.apply layer, arguments }
-    @element.addEventListener type, eventHandler, false
+    @element_.addEventListener type, eventHandler, false
     eventHandler
   }
 
   UILayer.prototype.removeEventListener = ^(type, handler) {
-    @element.removeEventListener ((touchEventsToMouseEvents[type] || type), handler, false)
+    @element_.removeEventListener ((touchEventsToMouseEvents[type] || type), handler, false)
     handler
   }
 } else {
   UILayer.prototype.on = ^(type, handler) {
     layer = this
     eventHandler = ^{ handler.apply layer, arguments }
-    @element.addEventListener type, eventHandler, false
+    @element_.addEventListener type, eventHandler, false
     eventHandler
   }
-  
+
   UILayer.prototype.removeEventListener = ^(type, handler) {
-    @element.removeEventListener type, handler, false
+    @element_.removeEventListener type, handler, false
     handler
   }
 }
@@ -721,30 +899,30 @@ TransitionEvent = 'TransitionEvent'
 kEventClasses = {
   DOMActivate:UIEvent, load:UIEvent, unload:UIEvent, abort:UIEvent, error:UIEvent,
   select:UIEvent, resize:UIEvent, scroll:UIEvent,
-  
+
   blur:FocusEvent, DOMFocusIn:FocusEvent, DOMFocusOut:FocusEvent, focus:FocusEvent,
   focusin:FocusEvent, focusout:FocusEvent,
-  
+
   click:MouseEvent, dblclick:MouseEvent, mousedown:MouseEvent, mouseenter:MouseEvent,
   mouseleave:MouseEvent, mousemove:MouseEvent, mouseover:MouseEvent, mouseout:MouseEvent,
   mouseup:MouseEvent,
-  
+
   touchstart:TouchEvent, touchmove:TouchEvent, touchend:TouchEvent, touchcancel:TouchEvent,
 
   wheel:WheelEvent,
-  
+
   textinput:TextEvent,
-  
+
   keydown:KeyboardEvent, keypress:KeyboardEvent, keyup:KeyboardEvent,
-  
+
   compositionstart:CompositionEvent, compositionupdate:CompositionEvent, compositionend:CompositionEvent,
-  
+
   DOMAttrModified:MutationEvent, DOMCharacterDataModified:MutationEvent, DOMNodeInserted:MutationEvent,
   DOMNodeInsertedIntoDocument:MutationEvent, DOMNodeRemoved:MutationEvent,
   DOMNodeRemovedFromDocument:MutationEvent, DOMSubtreeModified:MutationEvent,
-  
+
   DOMAttributeNameChanged:MutationNameEvent, DOMElementNameChanged:MutationNameEvent,
-  
+
   transitionend: TransitionEvent
 }
 
@@ -754,6 +932,8 @@ kEventClasses = {
 # The return value is false if at least one of the event handlers which
 # handled this event called preventDefault. Otherwise it returns true.
 UILayer.prototype.emit = ^{
+  if (@eventsMuted)
+    return
   if (typeof arguments[0] == 'object')
     options = arguments[0]
   else if (typeof arguments.keywords == 'object')
@@ -765,21 +945,21 @@ UILayer.prototype.emit = ^{
   if (!options.type) throw Error 'no event type specified'
 
   eventClass = kEventClasses[options.type] || CustomEvent
-  
+
   if (eventClass == TouchEvent && !isTouchDevice) {
     # need to convert
     options.type = touchEventsToMouseEvents[options.type]
     eventClass = kEventClasses[options.type] || CustomEvent
   }
-  
+
   if (!(ev = document.createEvent eventClass)) {
     eventClass = CustomEvent
     ev = document.createEvent eventClass
   }
-  
+
   options.bubbles = !!(options.bubbles == undefined ? true : options.bubbles)
   options.cancelable = !!(options.cancelable == undefined ? true : options.cancelable)
-  
+
   if (eventClass == UIEvent) {
     ev.initUIEvent(options.type, options.bubbles, options.cancelable, (options.view || window),
                    (options.detail != undefined ? options.detail : 1) )
@@ -808,8 +988,8 @@ UILayer.prototype.emit = ^{
       ev[key] = value
     }
   }
-  
-  @element.dispatchEvent ev
+
+  @element_.dispatchEvent ev
 }
 
 
@@ -828,7 +1008,8 @@ baseStyle.appendChild document.createTextNode '.uilayer {'+
 '  display: block;'+
 '  visibility: visible;'+
 '  position: absolute;'+
-'  left:0; top:0; width:auto; height:auto;'+
+'  top:auto; right:auto; bottom:auto; left:auto;'+
+'  width:auto; height:auto;'+
 '  overflow: visible;'+
 #'  -webkit-user-select:none;'+
 #'  -webkit-text-size-adjust:none;'+

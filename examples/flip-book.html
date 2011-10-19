@@ -23,7 +23,7 @@ spacingBetweenPages = 3
 addPageAfterPage = ^(previousPage) {
   superlayer = previousPage || rootLayer
   page = superlayer.addSublayer UILayer { x:0, y:0, width:300, animated:true, className:'page' }
-  page.anchorPoint = [0,0]
+  page.transformOrigin = [0,0]
   page.perspective = superlayer.perspective
   
   pageNumber = 1

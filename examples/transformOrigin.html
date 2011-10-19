@@ -16,20 +16,22 @@ UILayer.debug = true
 rootLayer = UILayer { x:100, y:100, width:100, height:100, animated: true }
 document.body.appendChild rootLayer.element
 
-print 'rootLayer.anchorPoint ->', rootLayer.anchorPoint
+print 'rootLayer.transformOrigin ->', rootLayer.transformOrigin
 
 after {delay:1000} ^{
   rootLayer.scale = 2
 }
 after {delay:2000} ^{
-  rootLayer.anchorPoint = [0, 0.1]
-  print 'rootLayer.anchorPoint ->', rootLayer.anchorPoint
+  rootLayer.transformOrigin = [0, 0]
+  print 'rootLayer.transformOrigin ->', rootLayer.transformOrigin
   rootLayer.scale = 1
+  #rootLayer.rotation.x = 30
 }
 after {delay:3000} ^{
-  rootLayer.anchorPoint = [1, 0.8]
-  print 'rootLayer.anchorPoint ->', rootLayer.anchorPoint
+  rootLayer.transformOrigin = [1, 1]
+  print 'rootLayer.transformOrigin ->', rootLayer.transformOrigin
   rootLayer.scale = 2
+  #rootLayer.rotation.x = 60
 }
 
     </script>

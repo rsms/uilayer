@@ -1,5 +1,5 @@
 
-mkCSSPixelValueProperty = ^(name, eventPropertyName, defaultValue:0) {
+mkCSSPixelValueProperty = ^(name, defaultValue:0) {
   return {
     enumerable: true,
     get: ^{
@@ -11,17 +11,18 @@ mkCSSPixelValueProperty = ^(name, eventPropertyName, defaultValue:0) {
       return defaultValue
     },
     set: ^(value) {
+      oldValues = {}
+      oldValues[name] = this[name]
       if (value == undefined || value == null) {
         @layer.element.style.removeProperty name
-        return
+      } else if (typeof value == 'number') {
+        @layer.element.style.setProperty name, value+'px', null
+      } else {
+        @layer.element.style.setProperty name, Text(value), null
       }
 
-      if (typeof value == 'number')
-        @layer.element.style.setProperty name, value+'px', null
-      else
-        @layer.element.style.setProperty name, Text(value), null
-
-      @layer.emit 'UILayerFrameDidChange', {changedPropertyName:eventPropertyName}
+      if (!@layer.eventsMuted)
+        @layer.emit 'change:frame', oldValues
     }
   }
 }
@@ -41,8 +42,8 @@ module.exports = exports = UIFrame = class {
 }
 
 Object.defineProperties UIFrame.prototype, {
-  width: mkCSSPixelValueProperty 'width', 'width', -1,
-  height: mkCSSPixelValueProperty 'height', 'height', -1,
+  width: mkCSSPixelValueProperty 'width', -1,
+  height: mkCSSPixelValueProperty 'height', -1,
   
   x: { enumerable: true,
     get: ^{ @layer.matrix.m41 },
