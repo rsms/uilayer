@@ -165,12 +165,8 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   };
   _canonicalColor = function _canonicalColor(color) {
     color !== null && typeof color === "object" && color.__kw === _MoveKWArgsT && (arguments.keywords = color, color = color.color);
-    var isArray, rgb;
-    if (!(isArray = Array.isArray(color)) && typeof color === "object") {
-      color = [ color.r, color.g, color.b, color.a ];
-      isArray = true;
-    }
-    if (isArray) {
+    var rgb;
+    if (Array.isArray(isArray)) {
       if (color.length === 1) {
         color = [ color, color, color ];
       } else if (color.length === 2) {
@@ -569,23 +565,21 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
     backgroundColor: {
       get: function () {
         var color;
-        color = this.computedStyle.backgroundColor;
-        if (color === "transparent") color = null;
-        return color;
+        return (color = this.computedStyle.backgroundColor) === "transparent" ? null : color;
       },
       set: function (color) {
         color !== null && typeof color === "object" && color.__kw === _MoveKWArgsT && (arguments.keywords = color, color = color.color);
-        color = _canonicalColor(color);
-        return this.element_.style.backgroundColor = color;
+        return this.element_.style.backgroundColor = _canonicalColor(color);
       }
     },
     color: {
       get: function () {
-        return this.computedStyle.color;
+        var color;
+        return (color = this.computedStyle.color) === "transparent" ? null : color;
       },
       set: function (color) {
         color !== null && typeof color === "object" && color.__kw === _MoveKWArgsT && (arguments.keywords = color, color = color.color);
-        return this.element_.style.color = color;
+        return this.element_.style.color = _canonicalColor(color);
       }
     },
     hidden: {
