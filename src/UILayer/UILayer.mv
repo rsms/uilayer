@@ -33,7 +33,7 @@ DEPRECATED_PROPERTY = ^(oldName, newName) {return {get: ^{
 }}}
 
 _canonicalColor = ^(color) {
-  if (Array.isArray isArray) {
+  if (Array.isArray color) {
     if (color.length == 1) {
       # monochrome, no alpha
       color = [color,color,color]

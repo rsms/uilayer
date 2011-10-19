@@ -247,8 +247,8 @@ Example:
 
     layer = UILayer {x:0, y:0, width:100, height:100}
     layer.animated = true
-    layer.frame.x = 100
-    # Layer moves 100 px to the right during 500ms
+    layer.on 'touchstart', ^{ layer.frame.x += 100 }
+    # Layer moves 100 px to the right during 500ms when touched
 
 
 ### layer.animationDuration ⇄ number (0-inf]
@@ -260,8 +260,8 @@ Example:
     layer = UILayer {x:0, y:0, width:100, height:100}
     layer.animated = true
     layer.animationDuration = 200
-    layer.frame.x = 100
-    # Layer moves 100 px to the right during 200ms
+    layer.on 'touchstart', ^{ layer.frame.x += 100 }
+    # Layer moves 100 px to the right during 200ms when touched
 
 
 ### layer.animationTimingFunction ⇄ string
