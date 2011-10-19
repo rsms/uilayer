@@ -333,7 +333,7 @@ A list of all sublayers (other layers that are owned by, or live within, the lay
 
 ### layer.firstSublayer → layer
 
-First sublayer (equivalent to `layer.sublayers[0]`).
+First sublayer (equivalent to `layer.sublayers[0]` but better performing in cases where a layer have many sublayers).
 
 
 ### layer.addSublayer(layer:sublayer) → sublayer
