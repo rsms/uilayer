@@ -166,7 +166,7 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   _canonicalColor = function _canonicalColor(color) {
     color !== null && typeof color === "object" && color.__kw === _MoveKWArgsT && (arguments.keywords = color, color = color.color);
     var rgb;
-    if (Array.isArray(isArray)) {
+    if (Array.isArray(color)) {
       if (color.length === 1) {
         color = [ color, color, color ];
       } else if (color.length === 2) {
