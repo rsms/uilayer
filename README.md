@@ -27,7 +27,7 @@ document.body.appendChild(layer1.<a href="#dom">element</a>)</code></pre>
 </div>
 
 [Try it (written in Move) →](http://rsms.me/uilayer/examples/example1.html)<br>
-[Try it (written in JavaScript) →](http://rsms.me/uilayer/examples/use-with-javascript.html)
+[Try it (written in JavaScript) →](http://rsms.me/uilayer/examples/example1-javascript.html)
 
 ## Usage
 
