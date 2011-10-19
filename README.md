@@ -18,10 +18,10 @@ Here's a simple example: A layer inside another layer which moves 50px to the ri
 <pre class="plain-text"><code>layer1 = <a href="#api">UILayer</a>({ x:10, y:10, width:300, height:300, <a href="#animation">animated</a>:true });
 layer2 = <a href="#api">UILayer</a>({ x:50, y:50, width:200, height:200, <a href="#animation">animated</a>:true });
 layer1.<a href="#layer-hierarchy">addSublayer</a>(layer2);
-layer1.<a href="#style-attributes">backgroundColor</a> = 'hotpink'
+layer1.<a href="#style-attributes">backgroundColor</a> = 'salmon'
 layer1.<a href="#handling-events">on('touchstart'</a>, function () {
   layer1.<a href="#geometry">frame</a>.x += 50
-  layer2.<a href="#geometry">rotateBy</a> 10
+  layer2.<a href="#geometry">rotation.z</a> += 20
 });
 document.body.appendChild(layer1.<a href="#dom">element</a>)</code></pre>
 </div>
@@ -88,6 +88,27 @@ Example of creating a layer that spans the width of its superlayer, attached to 
 Example: [examples/anchor.html](http://rsms.me/uilayer/examples/anchor.html)
 
 
+### layer.moveBy(x, y:0, z:0)
+
+Modify position of the layer.
+
+### layer.rotation ⇄ Rotation {x:number, y:number, z:number}
+
+Rotation of the layer. Defaults to `{x:0, y:0, z:0}`. The returned object is a proxy, meaning it's possible to manipulate the values directly (e.g. `layer.rotation.x = 45`). Angles are expressed in degrees (0-360).
+
+When setting this value (rather than manipulating the returned proxy object), you only need to pass the values which you would like to modify. There's also a single ["change:rotation"](#change-rotation-oldvalues-x-y-z-) event emitted, rather than one even per axis, as implied by manipulating the proxy object.
+
+Example of rotating a layer around its Z-axis (spinning like a wheel):
+
+    layer.rotation.z = 45
+
+Example of setting several axis, causing a single change event to be emitted:
+
+    layer.rotation = {x:20, z:45}
+
+Example: [examples/rotation.html](http://rsms.me/uilayer/examples/rotation.html)
+
+
 ### layer.scale ⇄ number (0-inf]
 
 Scale of the layer. Defaults to 1.0 (100%).
@@ -96,16 +117,6 @@ Scale of the layer. Defaults to 1.0 (100%).
 ### layer.scaleBy(x, y:0, z:0)
 
 Modify scale of the layer.
-
-
-### layer.moveBy(x, y:0, z:0)
-
-Modify position of the layer.
-
-
-### layer.rotateBy(x, y:0, z:0)
-
-Modify rotation of the layer. Degrees are expressed as [0-360].
 
 
 ### layer.transformOrigin ⇄ [x, y, z]
@@ -432,3 +443,10 @@ A sublayer was added to the receiving layer.
 
 A sublayer was removed from the receiving layer.
 
+### change:frame {oldValues:{x:, y:, z:, width:, height:}}
+
+Emitted when `layer.rotation` changed. The oldValues object contains the old values of changes properties.
+
+### change:rotation {oldValues:{x:, y:, z:}}
+
+Emitted when `layer.rotation` changed. The oldValues object contains the old values of changes properties.

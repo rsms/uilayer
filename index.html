@@ -365,7 +365,7 @@ didInitiateRandomly = false
 initiateRandomly = ^(layer, isSublayer) {
   layer.moveBy 0, 0, (Math.random()*60)-30
   if (isSublayer)
-    layer.rotateBy((Math.random()*20)-10, (Math.random()*20)-10, (Math.random()*20)-10)
+    layer.matrix = layer.matrix.rotate((Math.random()*20)-10, (Math.random()*20)-10, (Math.random()*20)-10)
   layer.sublayers.forEach ^(sublayer) { initiateRandomly sublayer, true }
 }
 
@@ -398,7 +398,7 @@ addLetter = ^(letter, width, previousLayer) {
       initiateRandomly rootLayer
       didInitiateRandomly = true
     }
-    @rotateBy((Math.random()*20)-10, (Math.random()*20)-10, (Math.random()*20)-10)
+    layer.matrix = layer.matrix.rotate((Math.random()*20)-10, (Math.random()*20)-10, (Math.random()*20)-10)
     @moveBy((Math.random()*10)-5, (Math.random()*10)-5, (Math.random()*10)-5)
     #@scale *= (0.9 + (Math.random()*0.2))
     ev.stopPropagation()

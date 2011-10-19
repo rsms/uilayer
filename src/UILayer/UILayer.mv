@@ -14,19 +14,19 @@ if (!document.documentElement || document.documentElement.classList) {
   }
 }
 
-DEPRECATED = ^(oldName, newName) {^{
+DEPRECATED_WARN = ^(oldName, newName) {
   console.warn oldName+' is deprecated.'+(newName ? ' Use '+newName+' instead.' : '')
-}}
+}
 DEPRECATED_PROPERTY_WARNINGS = {}
 DEPRECATED_PROPERTY = ^(oldName, newName) {return {get: ^{
   if (!DEPRECATED_PROPERTY_WARNINGS['get '+oldName]) {
-    console.warn oldName+' is deprecated.'+(newName ? ' Use '+newName+' instead.' : '')
+    DEPRECATED_WARN oldName, newName
     DEPRECATED_PROPERTY_WARNINGS['get '+oldName] = true
   }
   this[newName]
 }, set: ^(value) {
   if (!DEPRECATED_PROPERTY_WARNINGS['set '+oldName]) {
-    console.warn oldName+' is deprecated.'+(newName ? ' Use '+newName+' instead.' : '')
+    DEPRECATED_WARN oldName, newName
     DEPRECATED_PROPERTY_WARNINGS['set '+oldName] = true
   }
   this[newName] = value
@@ -38,13 +38,20 @@ _canonicalColor = ^(color) {
     isArray = true
   }
   if (isArray) {
-    color = (255*Number(color[0] || 0)).toFixed(0)+','+
-            (255*Number(color[1] || 0)).toFixed(0)+','+
-            (255*Number(color[2] || 0)).toFixed(0)
+    if (color.length == 1) {
+      # monochrome, no alpha
+      color = [color,color,color]
+    } else if (color.length == 2) {
+      # monochrome with alpha
+      color = [color[0],color[0],color[0],color[1]]
+    }
+    rgb = (255*Number(color[0] || 0)).toFixed(0)+','+
+          (255*Number(color[1] || 0)).toFixed(0)+','+
+          (255*Number(color[2] || 0)).toFixed(0)
     if (color[3] != undefined) {
-      color = 'rgba('+color+','+Number(color[3] || 0)+')'
+      color = 'rgba('+rgb+','+Number(color[3] || 0)+')'
     } else {
-      color = 'rgb('+color+')'
+      color = 'rgb('+rgb+')'
     }
   } else {
     color = Text color
@@ -131,8 +138,8 @@ module.exports = UILayer = class {
 
 
   # Used by drawContent
-  drawContentAfterFrameSizeChange: ^(oldValues) {
-    if (!oldValues || 'width' in oldValues || 'height' in oldValues) {
+  drawContentAfterFrameSizeChange: ^(ev) {
+    if (!ev || !(oldValues = ev.oldValues) || 'width' in oldValues || 'height' in oldValues) {
       # This is needed to get a properly sized drawing buffer. Probably a WebKit bug.
       @element_.width = @frame.width
       @element_.height = @frame.height
@@ -282,7 +289,6 @@ UILayer.properties = {
   },
 
   frame: {
-    # frame is an object with {x, y, width, height}
     get: ^{
       if (!(frame_ = @frame_)) {
         frame_ = UIFrame this
@@ -293,11 +299,19 @@ UILayer.properties = {
     set: ^(frame) {
       if (typeof frame != 'object') throw TypeError 'not an object'
       frame_ = @frame
+
+      eventsMuted = @eventsMuted
       @eventsMuted = true
-      oldValues = {width:frame.width, height:frame.height}
-      frame.forEach ^(name, value) { frame_[name] = value }
-      @eventsMuted = false
-      @emit 'change:frame', oldValues
+
+      oldValues = {}
+      frame.forEach ^(name, value) {
+        oldValues[name] = frame_[name]
+        frame_[name] = value
+      }
+
+      if (!(@eventsMuted = eventsMuted)) {
+        @emit 'change:frame', {oldValues:oldValues}
+      }
     }
   },
 
@@ -316,6 +330,29 @@ UILayer.properties = {
         bounds.height = -1
       }
       bounds
+    }
+  },
+
+  rotation: {
+    get: ^{
+      if (!(rotation_ = @rotation_)) {
+        rotation_ = RotationProxy this
+        Object.defineProperty this, 'rotation_', {value:rotation_}
+      }
+      rotation_
+    },
+    set: ^(values) {
+      if (typeof values != 'object') throw TypeError 'not an object'
+
+      oldValues = {}
+
+      if ((x = values.x) != @rotateX_) { oldValues.x = @rotateX_ ; @rotateX_ = x }
+      if ((y = values.y) != @rotateY_) { oldValues.y = @rotateY_ ; @rotateY_ = y }
+      if ((z = values.z) != @rotateZ_) { oldValues.z = @rotateZ_ ; @rotateZ_ = z }
+
+      @matrix = @matrix
+
+      @emit 'change:rotation', {oldValues:oldValues}
     }
   },
 
@@ -584,11 +621,15 @@ UILayer.textureBackedProperties = {
         @_matrix = null
         @element_.style.webkitTransform = null
       } else {
-        @element_.style.webkitTransform = 'matrix3d('+
+        values = 'matrix3d('+
           M.m11+','+M.m12+','+M.m13+','+M.m14+','+
           M.m21+','+M.m22+','+M.m23+','+M.m24+','+
           M.m31+','+M.m32+','+M.m33+','+M.m34+','+
           M.m41+','+M.m42+','+M.m43+','+M.m44+')'
+        if (@rotateX_) values += ' rotateX('+(typeof @rotateX_ == 'number' ? @rotateX_+'deg' : @rotateX_)+')'
+        if (@rotateY_) values += ' rotateY('+(typeof @rotateY_ == 'number' ? @rotateY_+'deg' : @rotateY_)+')'
+        if (@rotateZ_) values += ' rotateZ('+(typeof @rotateZ_ == 'number' ? @rotateZ_+'deg' : @rotateZ_)+')'
+        @element_.style.webkitTransform = values
       }
     }
   },
@@ -618,15 +659,9 @@ UILayer.textureBackedProperties = {
 
   rotateBy: { # rotX, rotY, rotZ (0-360)
     value: ^{
+      DEPRECATED_WARN 'rotateBy', 'rotation'
       matrix = @matrix
       @matrix = matrix.rotate.apply matrix, arguments
-    }
-  },
-
-  rotateAxisAngleBy: { # x, y, z, angle
-    value: ^{
-      matrix = @matrix
-      @matrix = matrix.rotateAxisAngle.apply matrix, arguments
     }
   },
 
@@ -640,7 +675,16 @@ UILayer.textureBackedProperties = {
   moveBy: { # x, y, z (pixels)
     value: ^{
       matrix = @matrix
+      oldValues = {x:matrix.m41, y:matrix.m42, z:matrix.m43}
       @matrix = matrix.translate.apply matrix, arguments
+      if (!@eventsMuted) {
+        newMatrix = @matrix
+        if (!( ((oldValues.x == newMatrix.m41) && (oldValues.x = undefined))
+            || ((oldValues.y == newMatrix.m42) && (oldValues.y = undefined))
+            || ((oldValues.z == newMatrix.m43) && (oldValues.z = undefined)) )) {
+          @emit 'change:frame', {oldValues:oldValues}
+        }
+      }
     }
   },
 
@@ -996,6 +1040,51 @@ UILayer.prototype.emit = ^{
 #e.__proto__ = proto #Object.create e.__proto__, properties
 Object.defineProperties UILayer.prototype, UILayer.properties
 Object.defineProperties UILayer.prototype, UILayer.textureBackedProperties
+
+# ---------------------------------------------------------------------------------------
+
+RotationProxy = class {
+  constructor: ^(layer) {
+    Object.defineProperty this, 'layer', {value:layer}
+  },
+  toString: ^{
+    '{x:'+@x+', y:'+@y+', z:'+@z+'}'
+  },
+  toJSON: ^{
+    return {x:@x, y:@y, z:@z}
+  }
+}
+Object.defineProperties RotationProxy.prototype, {
+  x: { enumerable: true,
+    get: ^{ @layer.rotateX_ || 0 },
+    set: ^(angle) {
+      if ((oldValue = @layer.rotateX_) == angle) return
+      @layer.rotateX_ = angle
+      @layer.matrix = @layer.matrix
+      @layer.emit 'change:rotation', {oldValues:{x:oldValue}}
+    }
+  },
+
+  y: { enumerable: true,
+    get: ^{ @layer.rotateY_ || 0 },
+    set: ^(angle) {
+      if ((oldValue = @layer.rotateY_) == angle) return
+      @layer.rotateY_ = angle
+      @layer.matrix = @layer.matrix
+      @layer.emit 'change:rotation', {oldValues:{y:oldValue}}
+    }
+  },
+
+  z: { enumerable: true,
+    get: ^{ @layer.rotateZ_ || 0 },
+    set: ^(angle) {
+      if ((oldValue = @layer.rotateZ_) == angle) return
+      @layer.rotateZ_ = angle
+      @layer.matrix = @layer.matrix
+      @layer.emit 'change:rotation', {oldValues:{z:oldValue}}
+    }
+  },
+}
 
 # ---------------------------------------------------------------------------------------
 

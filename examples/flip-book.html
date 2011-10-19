@@ -30,10 +30,10 @@ addPageAfterPage = ^(previousPage) {
   
   if (previousPage) {
     page.frame.x = previousPage.frame.width + spacingBetweenPages
-    page.rotateBy 0, 94
+    page.rotation.y = 94
     after {delay:1} ^{
       rootLayer.frame.x -= page.frame.width + spacingBetweenPages
-      page.rotateBy 0, -94
+      page.rotation.y = 0
     }
     _page = previousPage
     ++pageNumber
@@ -65,7 +65,7 @@ onClickPage = ^(ev) {
     rootLayer.frame.x += rootLayerXDelta
     
     nextPage = @nextPage
-    nextPage.rotateBy 0, 94
+    nextPage.rotation.y = 94
     after {delay:nextPage.animationDuration} ^{
       nextPage.removeFromSuperlayer()
     }

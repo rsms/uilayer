@@ -17,18 +17,15 @@ document.body.appendChild ((rootLayer = UILayer({ x:0, y:100, width:640, height:
 rootLayer.perspective = 1000
 
 layer = rootLayer.addSublayer UILayer {
-  x:220, y:80, width:200, height:200, element: <x>.rotateBy 0, 45</x>,
+  x:220, y:80, width:200, height:200, element: <x>.rotation.y = 45</x>,
   animationDuration: 50, doubleSided:true }
 
 layer2 = rootLayer.addSublayer UILayer {
-  x:220, y:280, width:200, height:200, element: <x>.rotateBy 45</x>,
+  x:220, y:280, width:200, height:200, element: <x>.rotation.x = 45</x>,
   animationDuration: 50, doubleSided:true }
 
-rotationY = 45
-layer.rotateBy 0, rotationY
-
-rotationX = 45
-layer2.rotateBy rotationX, 0
+layer.rotation.y = 45
+layer2.rotation.x = 45
 
 perspectiveValue = document.querySelector '.perspectiveValue'
 perspectiveInput = document.querySelector '.perspectiveInput'

@@ -13,8 +13,9 @@
       body {
         background: black url(checker-pattern.png) repeat scroll top left;
         color: white;
-        font-family: "Helvetica";
-        font-size: 16px;
+        font: 16px/200px "Helvetica";
+        text-align:center;
+        -webkit-user-select:none;
       }
     </style>
   </head>
@@ -32,11 +33,12 @@ var layer1, layer2;
 
 layer1 = UILayer({x:10, y:10, width:300, height:300, animated:true});
 layer2 = UILayer({x:50, y:50, width:200, height:200, animated:true});
-layer2.backgroundColor = 'hotpink';
+layer2.backgroundColor = 'salmon';
+layer2.element.innerText = 'Touch me';
 layer1.addSublayer(layer2);
 layer1.on('touchstart', function () {
   layer1.frame.x += 50;
-  layer2.rotateBy(10)
+  layer2.rotation.z += 20;
 });
 document.body.appendChild(layer1.element);
 

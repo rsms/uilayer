@@ -76,18 +76,19 @@
   <body>
     <h1><a href="../">UILayer</a> <span style="color:#ccc">❯</span> Examples</h1>
     <ul>
-      <li>anchor.html</li>
-      <li>animate-combo.html</li>
-      <li>debug.html</li>
-      <li>drawContent.html</li>
-      <li>flip-book.html</li>
-      <li>hitTest.html</li>
-      <li>masksToBounds.html</li>
-      <li>perspective.html</li>
-      <li>subclassing.html</li>
-      <li>tag.html</li>
-      <li>transformOrigin.html</li>
-      <li>use-with-javascript.html</li>
+      <li>anchor</li>
+      <li>animate-combo</li>
+      <li>debug</li>
+      <li>drawContent</li>
+      <li>flip-book</li>
+      <li>hitTest</li>
+      <li>masksToBounds</li>
+      <li>perspective</li>
+      <li>rotation</li>
+      <li>subclassing</li>
+      <li>tag</li>
+      <li>transformOrigin</li>
+      <li>use-with-javascript</li>
     </ul>
     <div id="source"><h4></h4><pre class="prettyprint lang-html"></pre><a title="Close" class="close" href="javascript:closeSource()">×</a></div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
@@ -105,13 +106,10 @@
           var lang = 'html';
           if (body.match(/<body>\s*<\/body>/)) {
             var start, end, v = body.split('<'+'script type="text/move">');
-            console.log('v1', v.length);
             if (v.length === 2) {
               v = v[1].split('<'+'/script>');
               body = v[0];
               body = body.replace(/^[\s\r\n]+/m, '');
-              console.log('v2', v.length);
-              //if ((start = body.indexOf()))
               lang = 'mv';
             }
           }
@@ -133,7 +131,7 @@
       for (i = 0; i < ul.childNodes.length; ++i) {
         if ( (li = ul.childNodes[i]) && (li.nodeType === Node.ELEMENT_NODE) ) {
           url = li.innerText;
-          html = '<a href="'+url+'">'+url+'</a>'
+          html = '<a href="'+url+'.html">'+url+'</a>'
           //if (navigator.userAgent.indexOf('Chrome') !== -1) {
             html += ' &nbsp; (<a href="javascript:viewSource(\''+url+'\')">view source</a>)';
           //}

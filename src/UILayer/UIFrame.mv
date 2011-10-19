@@ -37,7 +37,7 @@ module.exports = exports = UIFrame = class {
   },
 
   toString: ^{
-    '{x:'+@x+', y:'+@y+', width:'+@width+', height:'+@height+'}'
+    '{x:'+@x+', y:'+@y+', z:'+@z+', width:'+@width+', height:'+@height+'}'
   }
 }
 
