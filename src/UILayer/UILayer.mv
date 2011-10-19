@@ -1097,6 +1097,7 @@ baseStyle.appendChild document.createTextNode '.uilayer {'+
 #'  -webkit-text-size-adjust:none;'+
 '  z-index:0;'+
 '  opacity:1;'+
+'  -webkit-box-sizing: border-box;'+
 '}\n'+
 '.uilayer.textureBacked {'+
 '  -webkit-transform: matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);'+
