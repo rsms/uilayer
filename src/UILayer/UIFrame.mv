@@ -22,7 +22,7 @@ mkCSSPixelValueProperty = ^(name, defaultValue:0) {
       }
 
       if (!@layer.eventsMuted)
-        @layer.emit 'change:frame', oldValues
+        @layer.emit 'change:frame', {oldValues:oldValues}
     }
   }
 }
