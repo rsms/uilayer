@@ -27,9 +27,10 @@ layer2.on 'change:frame', ^(ev) {
   }
 }
 
-after {delay:500} ^{
-  layer1.frame.width = 500
+after {delay:800} ^{
+  layer1.frame = {width: 500, x:90, y:90}
   after {delay:500} ^{
+    layer2.frame = {width: 500, y:90}
     layer2.frame.width = 300
   }
 }
