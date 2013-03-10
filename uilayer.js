@@ -1,5 +1,93 @@
+Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,module,exports){
+  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, mkCSSPixelValueProperty, UIFrame;
+  M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
+  EHTML = Move.EHTML;
+  mkCSSPixelValueProperty = function mkCSSPixelValueProperty(name, defaultValue) {
+    name !== null && typeof name === "object" && name.__kw === _MoveKWArgsT && (arguments.keywords = name, defaultValue = name.defaultValue, name = name.name);
+    if (defaultValue === undefined) defaultValue = 0;
+    return {
+      enumerable: true,
+      get: function () {
+        var v;
+        if (v = this.layer.element.style.getPropertyCSSValue(name)) {
+          if (v.primitiveType === CSSPrimitiveValue.CSS_PX) return v.getFloatValue(CSSPrimitiveValue.CSS_PX);
+        }
+        return defaultValue;
+      },
+      set: function (value) {
+        value !== null && typeof value === "object" && value.__kw === _MoveKWArgsT && (arguments.keywords = value, value = value.value);
+        var oldValues;
+        oldValues = {};
+        oldValues[name] = this[name];
+        if (value === undefined || value === null) {
+          this.layer.element.style.removeProperty(name);
+        } else if (typeof value === "number") {
+          this.layer.element.style.setProperty(name, value + "px", null);
+        } else {
+          this.layer.element.style.setProperty(name, Text(value), null);
+        }
+        if (!this.layer.eventsMuted) return this.layer.emit("change:frame", {
+          oldValues: oldValues
+        });
+      }
+    };
+  };
+  module.exports = exports = UIFrame = __class(UIFrame = function UIFrame() {
+    return __class.create(UIFrame, arguments);
+  }, {
+    constructor: function (layer) {
+      layer !== null && typeof layer === "object" && layer.__kw === _MoveKWArgsT && (arguments.keywords = layer, layer = layer.layer);
+      return Object.defineProperty(this, "layer", {
+        value: layer
+      });
+    },
+    toString: function () {
+      return "{x:" + this.x + ", y:" + this.y + ", z:" + this.z + ", width:" + this.width + ", height:" + this.height + "}";
+    }
+  });
+  return Object.defineProperties(UIFrame.prototype, {
+    width: mkCSSPixelValueProperty("width", -1),
+    height: mkCSSPixelValueProperty("height", -1),
+    x: {
+      enumerable: true,
+      get: function () {
+        return this.layer.matrix.m41;
+      },
+      set: function () {
+        var matrix;
+        matrix = this.layer.matrix;
+        matrix.m41 = arguments[0];
+        return this.layer.matrix = matrix;
+      }
+    },
+    y: {
+      enumerable: true,
+      get: function () {
+        return this.layer.matrix.m42;
+      },
+      set: function () {
+        var matrix;
+        matrix = this.layer.matrix;
+        matrix.m42 = arguments[0];
+        return this.layer.matrix = matrix;
+      }
+    },
+    z: {
+      enumerable: true,
+      get: function () {
+        return this.layer.matrix.m43;
+      },
+      set: function () {
+        var matrix;
+        matrix = this.layer.matrix;
+        matrix.m43 = arguments[0];
+        return this.layer.matrix = matrix;
+      }
+    }
+  });
+});
 Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,module,exports){
-  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, UIFrame, classNames, addClassName, hasClassName, removeClassName, DEPRECATED_WARN, DEPRECATED_PROPERTY_WARNINGS, DEPRECATED_PROPERTY, _canonicalColor, _swapElement, kSpecialProperties, UILayer, CSSMatrix, XCSSMatrix, isTouchDevice, touchEventsToMouseEvents, makeFakeTouchEvent, UIEvent, FocusEvent, MouseEvent, TouchEvent, WheelEvent, TextEvent, KeyboardEvent, CompositionEvent, MutationEvent, MutationNameEvent, CustomEvent, TransitionEvent, kEventClasses, RotationProxy, head, baseStyle;
+  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, UIFrame, classNames, addClassName, hasClassName, removeClassName, DEPRECATED_WARN, DEPRECATED_PROPERTY_WARNINGS, DEPRECATED_PROPERTY, _canonicalColor, _swapElement, kSpecialProperties, prefixed, lookupCSS, lookupJS, UILayer, CSSMatrix, XCSSMatrix, isTouchDevice, touchEventsToMouseEvents, makeFakeTouchEvent, UIEvent, FocusEvent, MouseEvent, TouchEvent, WheelEvent, TextEvent, KeyboardEvent, CompositionEvent, MutationEvent, MutationNameEvent, CustomEvent, TransitionEvent, kEventClasses, RotationProxy, head, baseStyle;
   M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
   EHTML = Move.EHTML;
   UIFrame = require("./UIFrame");
@@ -120,6 +208,16 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
     className: 1,
     ownerDocument: 1
   };
+  prefixed = require("prefixed");
+  [ "backface-visibility", "border-radius", "border-top-left-radius", "box-sizing", "perspective", "perspective-origin", "perspective-origin-x", "perspective-origin-y", "perspective-origin-z", "transform", "transform-origin", "transform-origin-x", "transform-origin-y", "transform-origin-z", "transform-style", "transition", "transition-delay", "transition-duration", "transition-property", "transition-timing-function", "user-select", "text-size-adjust" ].forEach(prefixed.addProperty);
+  lookupCSS = function lookupCSS(dashed) {
+    dashed !== null && typeof dashed === "object" && dashed.__kw === _MoveKWArgsT && (arguments.keywords = dashed, dashed = dashed.dashed);
+    return prefixed.lookup.css[dashed];
+  };
+  lookupJS = function lookupJS(camelCase) {
+    camelCase !== null && typeof camelCase === "object" && camelCase.__kw === _MoveKWArgsT && (arguments.keywords = camelCase, camelCase = camelCase.camelCase);
+    return prefixed.lookup.js[camelCase];
+  };
   module.exports = UILayer = __class(UILayer = function UILayer() {
     return __class.create(UILayer, arguments);
   }, {
@@ -236,35 +334,37 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
     perspective: {
       get: function () {
         var v;
-        return (v = this.style.getPropertyCSSValue("-webkit-perspective")) && v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 0;
+        return (v = this.style.getPropertyCSSValue(lookupCSS("perspective"))) && v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 0;
       },
       set: function (distance) {
         distance !== null && typeof distance === "object" && distance.__kw === _MoveKWArgsT && (arguments.keywords = distance, distance = distance.distance);
-        return this.element_.style.webkitPerspective = distance || "none";
+        return this.element_.style[lookupJS("perspective")] = distance || "none";
       }
     },
     perspectiveOrigin: {
       get: function () {
         var style, v;
         style = this.element_.style;
-        return [ (v = style.getPropertyCSSValue("-webkit-perspective-origin-x")) && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || .5) / 100, (v = style.getPropertyCSSValue("-webkit-perspective-origin-y")) && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || .5) / 100, (v = style.getPropertyCSSValue("-webkit-perspective-origin-z")) && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || 0) / 100 ];
+        return [ (v = style.getPropertyCSSValue(lookupCSS("perspective-origin-x"))) && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || .5) / 100, (v = style.getPropertyCSSValue(lookupCSS("perspective-origin-y"))) && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || .5) / 100, (v = style.getPropertyCSSValue(lookupCSS("perspective-origin-z"))) && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || 0) / 100 ];
       },
       set: function (distance) {
         distance !== null && typeof distance === "object" && distance.__kw === _MoveKWArgsT && (arguments.keywords = distance, distance = distance.distance);
         if (Array.isArray(distance)) distance = distance[0] * 100 + "% " + (distance[1] || .5) * 100 + "% " + (distance[2] || 0) * 100 + "%";
-        return this.element_.style.webkitPerspectiveOrigin = distance;
+        return this.element_.style[lookupJS("perspectiveOrigin")] = distance;
       }
     },
     preserve3d: {
       get: function () {
-        return this.element_.style.webkitTransformStyle === "preserve-3d";
+        return this.element_.style[lookupJS("transformStyle")] === "preserve-3d";
       },
       set: function (preserve3d) {
         preserve3d !== null && typeof preserve3d === "object" && preserve3d.__kw === _MoveKWArgsT && (arguments.keywords = preserve3d, preserve3d = preserve3d.preserve3d);
+        var property;
+        property = lookupCSS("transform-style");
         if (preserve3d) {
-          return this.element_.style.setProperty("-webkit-transform-style", "preserve-3d", null);
+          return this.element_.style.setProperty(property, "preserve-3d", null);
         } else {
-          return this.element_.style.removeProperty("-webkit-transform-style");
+          return this.element_.style.removeProperty(property);
         }
       }
     },
@@ -440,28 +540,32 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
     },
     doubleSided: {
       get: function () {
-        return this.element_.style.webkitBackfaceVisibility === "visible";
+        return this.element_.style[lookupJS("backfaceVisibility")] === "visible";
       },
       set: function (doubleSided) {
         doubleSided !== null && typeof doubleSided === "object" && doubleSided.__kw === _MoveKWArgsT && (arguments.keywords = doubleSided, doubleSided = doubleSided.doubleSided);
+        var property;
+        property = lookupCSS("backface-visibility");
         if (doubleSided) {
-          return this.element_.style.setProperty("-webkit-backface-visibility", "visible", null);
+          return this.element_.style.setProperty(property, "visible", null);
         } else {
-          return this.element_.style.removeProperty("-webkit-backface-visibility");
+          return this.element_.style.removeProperty(property);
         }
       }
     },
     cornerRadius: {
       get: function () {
         var v;
-        return (v = this.computedStyle.getPropertyCSSValue("-webkit-border-top-left-radius")) && v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 0;
+        return (v = this.computedStyle.getPropertyCSSValue(lookupCSS("border-top-left-radius"))) && v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 0;
       },
       set: function (value) {
         value !== null && typeof value === "object" && value.__kw === _MoveKWArgsT && (arguments.keywords = value, value = value.value);
+        var property;
+        property = lookupJS("borderRadius");
         if (value && (value = Number(value))) {
-          return this.element_.style.webkitBorderRadius = value.toFixed(0) + "px";
+          return this.element_.style[property] = value.toFixed(0) + "px";
         } else {
-          return this.element_.style.webkitBorderRadius = null;
+          return this.element_.style[property] = null;
         }
       }
     },
@@ -577,34 +681,36 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
     animated: {
       get: function () {
         if (!hasClassName(this.element_, "animated")) return false;
-        return this.computedStyle.webkitTransitionProperty;
+        return this.computedStyle[lookupJS("transitionProperty")];
       },
       set: function (animated) {
         animated !== null && typeof animated === "object" && animated.__kw === _MoveKWArgsT && (arguments.keywords = animated, animated = animated.animated);
+        var transform;
         if (animated && animated !== "none") {
           addClassName(this.element_, "animated");
+          transform = lookupCSS("transform");
           if (animated === "geometry") {
-            animated = "-webkit-transform,width,height";
+            animated = transform + ",width,height";
           } else if (animated === "transform") {
-            animated = "-webkit-transform";
+            animated = transform;
           } else if (Array.isArray(animated)) {
             animated = animated.join(",");
           } else if (typeof animated !== "string") {
             animated = "all";
           }
-          return this.element_.style.setProperty("-webkit-transition-property", animated, null);
+          return this.element_.style.setProperty(lookupCSS("transition-property"), animated, null);
         } else if (hasClassName(this.element_, "animated")) {
           removeClassName(this.element_, "animated");
-          return this.element_.style.removeProperty("-webkit-transition");
+          return this.element_.style.removeProperty(lookupCSS("transition"));
         }
       }
     },
     animationDuration: {
       get: function () {
         var v;
-        if (v = this.style.getPropertyCSSValue("-webkit-transition-duration")) {
+        if (v = this.style.getPropertyCSSValue(lookupCSS("transition-duration"))) {
           return v.getFloatValue(CSSPrimitiveValue.CSS_MS);
-        } else if (v = this.computedStyle.getPropertyCSSValue("-webkit-transition-duration")) {
+        } else if (v = this.computedStyle.getPropertyCSSValue(lookupCSS("transition-duration"))) {
           return v[0].getFloatValue(CSSPrimitiveValue.CSS_MS);
         }
         return 0;
@@ -612,17 +718,17 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
       set: function (value) {
         value !== null && typeof value === "object" && value.__kw === _MoveKWArgsT && (arguments.keywords = value, value = value.value);
         if (typeof value !== "number") throw TypeError("animationDuration must be a number"); else if (value < 0) throw TypeError("animationDuration must be a positive number");
-        return this.element_.style.setProperty("-webkit-transition-duration", value.toFixed(0) + "ms", null);
+        return this.element_.style.setProperty(lookupCSS("transition-duration"), value.toFixed(0) + "ms", null);
       }
     },
     animationTimingFunction: {
       get: function () {
         var v;
-        if (v = this.computedStyle.getPropertyCSSValue("-webkit-transition-timing-function")) return v.cssText;
+        if (v = this.computedStyle.getPropertyCSSValue(lookupCSS("transition-timing-function"))) return v.cssText;
       },
       set: function (value) {
         value !== null && typeof value === "object" && value.__kw === _MoveKWArgsT && (arguments.keywords = value, value = value.value);
-        return this.element_.style.setProperty("-webkit-transition-timing-function", value, null);
+        return this.element_.style.setProperty(lookupCSS("transition-timing-function"), value, null);
       }
     },
     ownerDocument: {
@@ -676,20 +782,21 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   UILayer.textureBackedProperties = {
     matrix: {
       get: function () {
-        return this._matrix || (this._matrix = new CSSMatrix(this.element_.style.webkitTransform));
+        return this._matrix || (this._matrix = new CSSMatrix(this.element_.style[lookupJS("transform")]));
       },
       set: function () {
-        var values;
+        var property, values;
         M = this._matrix = arguments[0];
+        property = lookupJS("transform");
         if (!M || !(M instanceof CSSMatrix)) {
           this._matrix = null;
-          return this.element_.style.webkitTransform = null;
+          return this.element_.style[property] = null;
         } else {
           values = "matrix3d(" + M.m11 + "," + M.m12 + "," + M.m13 + "," + M.m14 + "," + M.m21 + "," + M.m22 + "," + M.m23 + "," + M.m24 + "," + M.m31 + "," + M.m32 + "," + M.m33 + "," + M.m34 + "," + M.m41 + "," + M.m42 + "," + M.m43 + "," + M.m44 + ")";
           if (this.rotateX_) values += " rotateX(" + (typeof this.rotateX_ === "number" ? this.rotateX_ + "deg" : this.rotateX_) + ")";
           if (this.rotateY_) values += " rotateY(" + (typeof this.rotateY_ === "number" ? this.rotateY_ + "deg" : this.rotateY_) + ")";
           if (this.rotateZ_) values += " rotateZ(" + (typeof this.rotateZ_ === "number" ? this.rotateZ_ + "deg" : this.rotateZ_) + ")";
-          return this.element_.style.webkitTransform = values;
+          return this.element_.style[property] = values;
         }
       }
     },
@@ -748,29 +855,32 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
       get: function () {
         var point, v;
         point = [ .5, .5, 0 ];
-        if (v = this.element_.style.getPropertyCSSValue("-webkit-transform-origin-x")) point[0] = v.getFloatValue(v.primitiveType) / 100;
-        if (v = this.element_.style.getPropertyCSSValue("-webkit-transform-origin-y")) point[1] = v.getFloatValue(v.primitiveType) / 100;
-        if (v = this.element_.style.getPropertyCSSValue("-webkit-transform-origin-z")) point[3] = v.getFloatValue(v.primitiveType) / 100;
+        if (v = this.element_.style.getPropertyCSSValue(lookupCSS("transform-origin-x"))) point[0] = v.getFloatValue(v.primitiveType) / 100;
+        if (v = this.element_.style.getPropertyCSSValue(lookupCSS("transform-origin-y"))) point[1] = v.getFloatValue(v.primitiveType) / 100;
+        if (v = this.element_.style.getPropertyCSSValue(lookupCSS("transform-origin-z"))) point[3] = v.getFloatValue(v.primitiveType) / 100;
         return point;
       },
       set: function (origin) {
         origin !== null && typeof origin === "object" && origin.__kw === _MoveKWArgsT && (arguments.keywords = origin, origin = origin.origin);
-        var style;
+        var style, xProperty, yProperty, zProperty;
         style = this.element_.style;
+        xProperty = lookupCSS("transform-origin-x");
         if (origin[0] === .5 || origin[0] === undefined) {
-          style.removeProperty("-webkit-transform-origin-x");
+          style.removeProperty(xProperty);
         } else {
-          style.setProperty("-webkit-transform-origin-x", (100 * origin[0]).toFixed(0) + "%", null);
+          style.setProperty(xProperty, (100 * origin[0]).toFixed(0) + "%", null);
         }
+        yProperty = lookupCSS("transform-origin-y");
         if (origin[1] === .5 || origin[1] === undefined) {
-          style.removeProperty("-webkit-transform-origin-y");
+          style.removeProperty(yProperty);
         } else {
-          style.setProperty("-webkit-transform-origin-y", (100 * origin[1]).toFixed(0) + "%", null);
+          style.setProperty(yProperty, (100 * origin[1]).toFixed(0) + "%", null);
         }
+        zProperty = lookupCSS("transform-origin-z");
         if (origin[2] === 0 || origin[2] === undefined) {
-          return style.removeProperty("-webkit-transform-origin-z");
+          return style.removeProperty(zProperty);
         } else {
-          return style.setProperty("-webkit-transform-origin-z", (100 * origin[2]).toFixed(0) + "%", null);
+          return style.setProperty(zProperty, (100 * origin[2]).toFixed(0) + "%", null);
         }
       }
     },
@@ -1175,8 +1285,9 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   if ((head = document.getElementsByTagName("head")).length) head = head[0]; else head = document.body || document.documentElement;
   baseStyle = document.createElement("style");
   baseStyle.id = "UILayer-base-style";
-  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  visibility: visible;" + "  position: absolute;" + "  top:auto; right:auto; bottom:auto; left:auto;" + "  width:auto; height:auto;" + "  overflow: visible;" + "  z-index:0;" + "  opacity:1;" + "  -webkit-box-sizing: border-box;" + "}\n" + ".uilayer.textureBacked {" + "  -webkit-transform: matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);" + "  -webkit-transform-origin: 50% 50% 0%;" + "  -webkit-backface-visibility: hidden;" + "  -webkit-transform-style: flat;" + "}\n" + ".uilayer.animated {" + "  -webkit-transition-duration: 500ms;" + "  -webkit-transition-timing-function: ease;" + "  -webkit-transition-delay: 0;" + "  -webkit-transition-property: none;" + "}"));
-  return head.appendChild(baseStyle);
+  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  visibility: visible;" + "  position: absolute;" + "  top:auto; right:auto; bottom:auto; left:auto;" + "  width:auto; height:auto;" + "  overflow: visible;" + "  z-index:0;" + "  opacity:1;" + "  " + lookupCSS("box-sizing") + ": border-box;" + "}\n" + ".uilayer.textureBacked {" + "  " + lookupCSS("transform") + ": matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);" + "  " + lookupCSS("transform-origin") + ": 50% 50% 0%;" + "  " + lookupCSS("backface-visibility") + ": hidden;" + "  " + lookupCSS("transform-style") + ": flat;" + "}\n" + ".uilayer.animated {" + "  " + lookupCSS("transition-duration") + ": 500ms;" + "  " + lookupCSS("transition-timing-function") + ": ease;" + "  " + lookupCSS("transition-delay") + ": 0s;" + "  " + lookupCSS("transition-property") + ": none;" + "}"));
+  head.appendChild(baseStyle);
+  return console.log(baseStyle);
 });
 Move.require.define("UILayer","UILayer/index.mv",function(require,module,exports){
   var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, version;
@@ -1656,91 +1767,179 @@ module.exports = {
   isIdentityOrTranslation: isIdentityOrTranslation,
   adjoint: adjoint
 };});
-Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,module,exports){
-  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, mkCSSPixelValueProperty, UIFrame;
-  M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
-  EHTML = Move.EHTML;
-  mkCSSPixelValueProperty = function mkCSSPixelValueProperty(name, defaultValue) {
-    name !== null && typeof name === "object" && name.__kw === _MoveKWArgsT && (arguments.keywords = name, defaultValue = name.defaultValue, name = name.name);
-    if (defaultValue === undefined) defaultValue = 0;
-    return {
-      enumerable: true,
-      get: function () {
-        var v;
-        if (v = this.layer.element.style.getPropertyCSSValue(name)) {
-          if (v.primitiveType === CSSPrimitiveValue.CSS_PX) return v.getFloatValue(CSSPrimitiveValue.CSS_PX);
-        }
-        return defaultValue;
-      },
-      set: function (value) {
-        value !== null && typeof value === "object" && value.__kw === _MoveKWArgsT && (arguments.keywords = value, value = value.value);
-        var oldValues;
-        oldValues = {};
-        oldValues[name] = this[name];
-        if (value === undefined || value === null) {
-          this.layer.element.style.removeProperty(name);
-        } else if (typeof value === "number") {
-          this.layer.element.style.setProperty(name, value + "px", null);
-        } else {
-          this.layer.element.style.setProperty(name, Text(value), null);
-        }
-        if (!this.layer.eventsMuted) return this.layer.emit("change:frame", {
-          oldValues: oldValues
-        });
-      }
+Move.require.define("prefixed/Modernizr","prefixed/Modernizr.js",function(require,module,exports){module.exports = function(window, document, undefined) {
+  var Modernizr = {}, docElement = document.documentElement, mod = "modernizr", modElem = document.createElement(mod), mStyle = modElem.style, inputElem, toString = {}.toString, prefixes = " -webkit- -moz- -o- -ms- ".split(" "), omPrefixes = "Webkit Moz O ms", cssomPrefixes = omPrefixes.split(" "), domPrefixes = omPrefixes.toLowerCase().split(" "), tests = {}, inputs = {}, attrs = {}, classes = [], slice = classes.slice, featureName, _hasOwnProperty = {}.hasOwnProperty, hasOwnProp;
+  if (!is(_hasOwnProperty, "undefined") && !is(_hasOwnProperty.call, "undefined")) {
+    hasOwnProp = function(object, property) {
+      return _hasOwnProperty.call(object, property);
     };
+  } else {
+    hasOwnProp = function(object, property) {
+      return property in object && is(object.constructor.prototype[property], "undefined");
+    };
+  }
+  if (!Function.prototype.bind) {
+    Function.prototype.bind = function bind(that) {
+      var target = this;
+      if (typeof target != "function") {
+        throw new TypeError;
+      }
+      var args = slice.call(arguments, 1), bound = function() {
+        if (this instanceof bound) {
+          var F = function() {};
+          F.prototype = target.prototype;
+          var self = new F;
+          var result = target.apply(self, args.concat(slice.call(arguments)));
+          if (Object(result) === result) {
+            return result;
+          }
+          return self;
+        } else {
+          return target.apply(that, args.concat(slice.call(arguments)));
+        }
+      };
+      return bound;
+    };
+  }
+  setCss("");
+  modElem = inputElem = null;
+  Modernizr._prefixes = prefixes;
+  Modernizr._domPrefixes = domPrefixes;
+  Modernizr._cssomPrefixes = cssomPrefixes;
+  function setCss(str) {
+    mStyle.cssText = str;
+  }
+  function setCssAll(str1, str2) {
+    return setCss(prefixes.join(str1 + ";") + (str2 || ""));
+  }
+  function is(obj, type) {
+    return typeof obj === type;
+  }
+  function contains(str, substr) {
+    return !!~("" + str).indexOf(substr);
+  }
+  function testProps(props, prefixed) {
+    for (var i in props) {
+      var prop = props[i];
+      if (!contains(prop, "-") && mStyle[prop] !== undefined) {
+        return prefixed == "pfx" ? prop : true;
+      }
+    }
+    return false;
+  }
+  function testDOMProps(props, obj, elem) {
+    for (var i in props) {
+      var item = obj[props[i]];
+      if (item !== undefined) {
+        if (elem === false) return props[i];
+        if (is(item, "function")) {
+          return item.bind(elem || obj);
+        }
+        return item;
+      }
+    }
+    return false;
+  }
+  function testPropsAll(prop, prefixed, elem) {
+    var ucProp = prop.charAt(0).toUpperCase() + prop.slice(1), props = (prop + " " + cssomPrefixes.join(ucProp + " ") + ucProp).split(" ");
+    if (is(prefixed, "string") || is(prefixed, "undefined")) {
+      return testProps(props, prefixed);
+    } else {
+      props = (prop + " " + domPrefixes.join(ucProp + " ") + ucProp).split(" ");
+      return testDOMProps(props, prefixed, elem);
+    }
+  }
+  Modernizr.addTest = function(feature, test) {
+    if (typeof feature == "object") {
+      for (var key in feature) {
+        if (hasOwnProp(feature, key)) {
+          Modernizr.addTest(key, feature[key]);
+        }
+      }
+    } else {
+      feature = feature.toLowerCase();
+      if (Modernizr[feature] !== undefined) {
+        return Modernizr;
+      }
+      test = typeof test == "function" ? test() : test;
+      if (typeof enableClasses !== "undefined" && enableClasses) {
+        docElement.className += " " + (test ? "" : "no-") + feature;
+      }
+      Modernizr[feature] = test;
+    }
+    return Modernizr;
   };
-  module.exports = exports = UIFrame = __class(UIFrame = function UIFrame() {
-    return __class.create(UIFrame, arguments);
-  }, {
-    constructor: function (layer) {
-      layer !== null && typeof layer === "object" && layer.__kw === _MoveKWArgsT && (arguments.keywords = layer, layer = layer.layer);
-      return Object.defineProperty(this, "layer", {
-        value: layer
-      });
-    },
-    toString: function () {
-      return "{x:" + this.x + ", y:" + this.y + ", z:" + this.z + ", width:" + this.width + ", height:" + this.height + "}";
-    }
-  });
-  return Object.defineProperties(UIFrame.prototype, {
-    width: mkCSSPixelValueProperty("width", -1),
-    height: mkCSSPixelValueProperty("height", -1),
-    x: {
-      enumerable: true,
-      get: function () {
-        return this.layer.matrix.m41;
-      },
-      set: function () {
-        var matrix;
-        matrix = this.layer.matrix;
-        matrix.m41 = arguments[0];
-        return this.layer.matrix = matrix;
-      }
-    },
-    y: {
-      enumerable: true,
-      get: function () {
-        return this.layer.matrix.m42;
-      },
-      set: function () {
-        var matrix;
-        matrix = this.layer.matrix;
-        matrix.m42 = arguments[0];
-        return this.layer.matrix = matrix;
-      }
-    },
-    z: {
-      enumerable: true,
-      get: function () {
-        return this.layer.matrix.m43;
-      },
-      set: function () {
-        var matrix;
-        matrix = this.layer.matrix;
-        matrix.m43 = arguments[0];
-        return this.layer.matrix = matrix;
+  Modernizr.testProp = function(prop) {
+    return testProps([ prop ]);
+  };
+  Modernizr.testAllProps = testPropsAll;
+  Modernizr.testStyles = function injectElementWithStyles(rule, callback, nodes, testnames) {
+    var style, ret, node, docOverflow;
+    var div = document.createElement("div"), body = document.body, fakeBody = body || document.createElement("body");
+    if (parseInt(nodes, 10)) {
+      while (nodes--) {
+        node = document.createElement("div");
+        node.id = testnames ? testnames[nodes] : mod + (nodes + 1);
+        div.appendChild(node);
       }
     }
+    style = [ "&#173;", '<style id="s', mod, '">', rule, "</style>" ].join("");
+    div.id = mod;
+    (body ? div : fakeBody).innerHTML += style;
+    fakeBody.appendChild(div);
+    if (!body) {
+      fakeBody.style.background = "";
+      fakeBody.style.overflow = "hidden";
+      docOverflow = docElement.style.overflow;
+      docElement.style.overflow = "hidden";
+      docElement.appendChild(fakeBody);
+    }
+    ret = callback(div, rule);
+    if (!body) {
+      fakeBody.parentNode.removeChild(fakeBody);
+      docElement.style.overflow = docOverflow;
+    } else {
+      div.parentNode.removeChild(div);
+    }
+    return !!ret;
+  };
+  Modernizr.prefixed = function(prop, obj, elem) {
+    if (!obj) {
+      return testPropsAll(prop, "pfx");
+    } else {
+      return testPropsAll(prop, obj, elem);
+    }
+  };
+  return Modernizr;
+}(this, this.document);});
+Move.require.define("prefixed","prefixed/index.js",function(require,module,exports){module.exports.features = require("./Modernizr");
+
+module.exports.dashedToCamelCase = function(dashed) {
+  return dashed.replace(/(\-[a-z])/g, function(match, p1, offset, string) {
+    return (offset === 0 ? p1.toLowerCase() : p1.toUpperCase()).replace("-", "");
   });
-});
+};
+
+module.exports.camelCaseToDashed = function(camelCase) {
+  return camelCase.replace(/([A-Z])/g, function(str, m1) {
+    return "-" + m1.toLowerCase();
+  }).replace(/^ms-/, "-ms-");
+};
+
+var lookup = module.exports.lookup = {
+  css: {},
+  js: {}
+};
+
+module.exports.addProperty = function(dashedOrCamelCase) {
+  var camelCase = module.exports.dashedToCamelCase(dashedOrCamelCase);
+  var dashed = module.exports.camelCaseToDashed(camelCase);
+  var prefixedCC = module.exports.features.prefixed(camelCase);
+  module.exports.lookup.js[camelCase] = prefixedCC;
+  if (prefixedCC) {
+    module.exports.lookup.css[dashed] = module.exports.camelCaseToDashed(prefixedCC);
+  } else {
+    module.exports.lookup.css[dashed] = prefixedCC;
+    console.log("no support for", dashed, camelCase, prefixedCC);
+  }
+};});

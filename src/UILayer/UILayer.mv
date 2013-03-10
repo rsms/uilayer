@@ -83,6 +83,38 @@ _swapElement = ^(parentNode, oldElement, newElement, deep){
 
 
 kSpecialProperties = {element:1, debug:1, x:1, y:1, width:1, height:1, className:1, ownerDocument:1}
+import prefixed
+
+# All the CSS & JS properties used in the script (expressed as CSS)
+([
+  'backface-visibility',
+  'border-radius',
+  'border-top-left-radius',
+  'box-sizing',
+  'perspective',
+  'perspective-origin',
+  'perspective-origin-x',
+  'perspective-origin-y',
+  'perspective-origin-z',
+  'transform',
+  'transform-origin',
+  'transform-origin-x',
+  'transform-origin-y',
+  'transform-origin-z',
+  'transform-style',
+  'transition',
+  'transition-delay',
+  'transition-duration',
+  'transition-property',
+  'transition-timing-function',
+  'user-select',
+  'text-size-adjust'
+])
+# build a list of any prefixed versions of the CSS & JS properties
+.forEach(prefixed.addProperty);
+
+lookupCSS = ^(dashed) { prefixed.lookup.css[dashed] }
+lookupJS = ^(camelCase) { prefixed.lookup.js[camelCase] }
 
 module.exports = UILayer = class {
   constructor: ^{
@@ -131,7 +163,6 @@ module.exports = UILayer = class {
         this[key] = value
     }, this
   },
-
 
   # Used by drawContent
   drawContentAfterFrameSizeChange: ^(ev) {
@@ -205,38 +236,39 @@ UILayer.properties = {
 
   perspective: {
     get: ^{
-      (v = @style.getPropertyCSSValue '-webkit-perspective') &&
+      (v = @style.getPropertyCSSValue lookupCSS 'perspective') &&
         v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 0
     },
-    set: ^(distance) { @element_.style.webkitPerspective = distance || 'none' },
+    set: ^(distance) { @element_.style[ lookupJS 'perspective' ] = distance || 'none' },
   },
 
   perspectiveOrigin: {
     get: ^{
       style = @element_.style
-      [ (v = style.getPropertyCSSValue '-webkit-perspective-origin-x')
+      [ (v = style.getPropertyCSSValue lookupCSS 'perspective-origin-x')
           && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || 0.5) / 100,
-        (v = style.getPropertyCSSValue '-webkit-perspective-origin-y')
+        (v = style.getPropertyCSSValue lookupCSS 'perspective-origin-y')
           && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || 0.5) / 100,
-        (v = style.getPropertyCSSValue '-webkit-perspective-origin-z')
+        (v = style.getPropertyCSSValue lookupCSS 'perspective-origin-z')
           && (v.getFloatValue(CSSPrimitiveValue.CSS_PERCENTAGE) || 0) / 100 ]
     },
     set: ^(distance) {
       if (Array.isArray distance)
         distance = (distance[0]*100)+'% '+((distance[1] || 0.5)*100)+'% '+((distance[2] || 0)*100)+'%'
-      @element_.style.webkitPerspectiveOrigin = distance
+      @element_.style[ lookupJS 'perspectiveOrigin' ] = distance
     },
   },
 
   preserve3d: {
     get: ^{
-      @element_.style.webkitTransformStyle == 'preserve-3d'
+      @element_.style[ lookupJS 'transformStyle' ] == 'preserve-3d'
     },
     set: ^(preserve3d) {
+      property = lookupCSS 'transform-style'
       if (preserve3d) {
-        @element_.style.setProperty '-webkit-transform-style', 'preserve-3d', null
+        @element_.style.setProperty property, 'preserve-3d', null
       } else {
-        @element_.style.removeProperty '-webkit-transform-style'
+        @element_.style.removeProperty property
       }
     },
   },
@@ -374,23 +406,28 @@ UILayer.properties = {
   },
 
   doubleSided: {
-    get: ^{ @element_.style.webkitBackfaceVisibility == 'visible' },
+    get: ^{ @element_.style[ lookupJS 'backfaceVisibility' ] == 'visible' },
     set: ^(doubleSided) {
+      property = lookupCSS 'backface-visibility'
       if (doubleSided) {
-        @element_.style.setProperty '-webkit-backface-visibility', 'visible', null
+        @element_.style.setProperty property, 'visible', null
       } else {
-        @element_.style.removeProperty '-webkit-backface-visibility'
+        @element_.style.removeProperty property
       }
     },
   },
 
   cornerRadius: {
-    get: ^{ (v = @computedStyle.getPropertyCSSValue '-webkit-border-top-left-radius') && v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 0 },
+    get: ^{
+      (v = @computedStyle.getPropertyCSSValue lookupCSS 'border-top-left-radius') &&
+       v.getFloatValue(CSSPrimitiveValue.CSS_NUMBER) || 0
+    },
     set: ^(value) {
+      property = lookupJS 'borderRadius'
       if (value && (value = Number value)) {
-        @element_.style.webkitBorderRadius = value.toFixed(0)+'px'
+        @element_.style[property] = value.toFixed(0)+'px'
       } else {
-        @element_.style.webkitBorderRadius = null
+        @element_.style[property] = null
       }
     }
   },
@@ -499,35 +536,35 @@ UILayer.properties = {
     get: ^{
       if (!hasClassName @element_, 'animated')
         return false
-      @computedStyle.webkitTransitionProperty
+      @computedStyle[ lookupJS 'transitionProperty' ]
     },
     set: ^(animated) {
       if (animated && animated != 'none') {
         addClassName @element_, 'animated'
-
+        transform = lookupCSS 'transform'
         if (animated == 'geometry') {
-          animated = '-webkit-transform,width,height'
+          animated = transform + ',width,height'
         } else if (animated == 'transform') {
-          animated = '-webkit-transform'
+          animated = transform
         } else if (Array.isArray animated) {
           animated = animated.join ','
         } else if (typeof animated != 'string') {
           animated = 'all'
         }
 
-        @element_.style.setProperty '-webkit-transition-property', animated, null
+        @element_.style.setProperty lookupCSS('transition-property'), animated, null
       } else if (hasClassName @element_, 'animated') {
         removeClassName @element_, 'animated'
-        @element_.style.removeProperty '-webkit-transition'
+        @element_.style.removeProperty lookupCSS 'transition'
       }
     }
   },
 
   animationDuration: {
     get: ^{
-      if (v = @style.getPropertyCSSValue '-webkit-transition-duration') {
+      if (v = @style.getPropertyCSSValue lookupCSS 'transition-duration') {
         return v.getFloatValue CSSPrimitiveValue.CSS_MS
-      } else if (v = @computedStyle.getPropertyCSSValue '-webkit-transition-duration') {
+      } else if (v = @computedStyle.getPropertyCSSValue lookupCSS 'transition-duration') {
         return v[0].getFloatValue CSSPrimitiveValue.CSS_MS
       }
       0
@@ -535,17 +572,17 @@ UILayer.properties = {
     set: ^(value) {
       if (typeof value != 'number') throw TypeError 'animationDuration must be a number'
       else if (value < 0) throw TypeError 'animationDuration must be a positive number'
-      @element_.style.setProperty '-webkit-transition-duration', value.toFixed(0)+'ms', null
+      @element_.style.setProperty lookupCSS('transition-duration'), value.toFixed(0)+'ms', null
     }
   },
 
   animationTimingFunction: {
     get: ^{
-      if (v = @computedStyle.getPropertyCSSValue '-webkit-transition-timing-function')
+      if (v = @computedStyle.getPropertyCSSValue lookupCSS 'transition-timing-function')
         return v.cssText
     },
     set: ^(value) {
-      @element_.style.setProperty '-webkit-transition-timing-function', value, null
+      @element_.style.setProperty lookupCSS('transition-timing-function'), value, null
     }
   },
 
@@ -612,13 +649,14 @@ if (window.WebKitCSSMatrix) {
 UILayer.textureBackedProperties = {
   matrix: {
     get: ^{
-      @_matrix || (@_matrix = new CSSMatrix(@element_.style.webkitTransform))
+      @_matrix || (@_matrix = new CSSMatrix(@element_.style[ lookupJS 'transform' ]))
     },
     set: ^{
       M = @_matrix = arguments[0]
+      property = lookupJS 'transform'
       if (!M || !(M instanceof CSSMatrix)) {
         @_matrix = null
-        @element_.style.webkitTransform = null
+        @element_.style[ property ] = null
       } else {
         values = 'matrix3d('+
           M.m11+','+M.m12+','+M.m13+','+M.m14+','+
@@ -628,7 +666,7 @@ UILayer.textureBackedProperties = {
         if (@rotateX_) values += ' rotateX('+(typeof @rotateX_ == 'number' ? @rotateX_+'deg' : @rotateX_)+')'
         if (@rotateY_) values += ' rotateY('+(typeof @rotateY_ == 'number' ? @rotateY_+'deg' : @rotateY_)+')'
         if (@rotateZ_) values += ' rotateZ('+(typeof @rotateZ_ == 'number' ? @rotateZ_+'deg' : @rotateZ_)+')'
-        @element_.style.webkitTransform = values
+        @element_.style[ property ] = values
       }
     }
   },
@@ -691,33 +729,35 @@ UILayer.textureBackedProperties = {
   transformOrigin: {
     get: ^{
       point = [0.5, 0.5, 0]
-      if (v = @element_.style.getPropertyCSSValue '-webkit-transform-origin-x')
+      if (v = @element_.style.getPropertyCSSValue lookupCSS 'transform-origin-x')
         point[0] = v.getFloatValue(v.primitiveType)/100
-      if (v = @element_.style.getPropertyCSSValue '-webkit-transform-origin-y')
+      if (v = @element_.style.getPropertyCSSValue lookupCSS 'transform-origin-y')
         point[1] = v.getFloatValue(v.primitiveType)/100
-      if (v = @element_.style.getPropertyCSSValue '-webkit-transform-origin-z')
+      if (v = @element_.style.getPropertyCSSValue lookupCSS 'transform-origin-z')
         point[3] = v.getFloatValue(v.primitiveType)/100
       point
     },
     set: ^(origin) {
       style = @element_.style
-
+      xProperty = lookupCSS 'transform-origin-x'
       if (origin[0] == 0.5 || origin[0] == undefined) {
-        style.removeProperty '-webkit-transform-origin-x'
+        style.removeProperty xProperty
       } else {
-        style.setProperty '-webkit-transform-origin-x', (100*origin[0]).toFixed(0)+'%', null
+        style.setProperty xProperty, (100*origin[0]).toFixed(0)+'%', null
       }
 
+      yProperty = lookupCSS 'transform-origin-y'
       if (origin[1] == 0.5 || origin[1] == undefined) {
-        style.removeProperty '-webkit-transform-origin-y'
+        style.removeProperty yProperty
       } else {
-        style.setProperty '-webkit-transform-origin-y', (100*origin[1]).toFixed(0)+'%', null
+        style.setProperty yProperty, (100*origin[1]).toFixed(0)+'%', null
       }
 
+      zProperty = lookupCSS 'transform-origin-z'
       if (origin[2] == 0 || origin[2] == undefined) {
-        style.removeProperty '-webkit-transform-origin-z'
+        style.removeProperty zProperty
       } else {
-        style.setProperty '-webkit-transform-origin-z', (100*origin[2]).toFixed(0)+'%', null
+        style.setProperty zProperty, (100*origin[2]).toFixed(0)+'%', null
       }
     }
   },
@@ -1099,25 +1139,23 @@ baseStyle.appendChild document.createTextNode '.uilayer {'+
 '  top:auto; right:auto; bottom:auto; left:auto;'+
 '  width:auto; height:auto;'+
 '  overflow: visible;'+
-#'  -webkit-user-select:none;'+
-#'  -webkit-text-size-adjust:none;'+
+#'  ' + lookupCSS('user-select:none') + ';'+
+#'  ' + lookupCSS('text-size-adjust') + ':none;'+
 '  z-index:0;'+
 '  opacity:1;'+
-'  -webkit-box-sizing: border-box;'+
+'  ' + lookupCSS('box-sizing') + ': border-box;'+
 '}\n'+
 '.uilayer.textureBacked {'+
-'  -webkit-transform: matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);'+
-'  -webkit-transform-origin: 50% 50% 0%;'+
-'  -webkit-backface-visibility: hidden;'+
-'  -webkit-transform-style: flat;'+
+'  ' + lookupCSS('transform') + ': matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);'+
+'  ' + lookupCSS('transform-origin') + ': 50% 50% 0%;'+
+'  ' + lookupCSS('backface-visibility') + ': hidden;'+
+'  ' + lookupCSS('transform-style') + ': flat;'+
 '}\n'+
 '.uilayer.animated {'+
-'  -webkit-transition-duration: 500ms;'+
-'  -webkit-transition-timing-function: ease;'+
-'  -webkit-transition-delay: 0;'+
-'  -webkit-transition-property: none;'+
+'  ' + lookupCSS('transition-duration') + ': 500ms;'+
+'  ' + lookupCSS('transition-timing-function') + ': ease;'+
+'  ' + lookupCSS('transition-delay') + ': 0s;'+
+'  ' + lookupCSS('transition-property') + ': none;'+
 '}'
 
 head.appendChild baseStyle
-
-
