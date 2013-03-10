@@ -603,14 +603,20 @@ UILayer.hitTest = ^(x, y) {
 
 
 # Properties for layers which are texture-backed
+if (window.WebKitCSSMatrix) {
+  CSSMatrix = WebKitCSSMatrix
+} else {
+  import XCSSMatrix/XCSSMatrix
+  CSSMatrix = XCSSMatrix
+}
 UILayer.textureBackedProperties = {
   matrix: {
     get: ^{
-      @_matrix || (@_matrix = new WebKitCSSMatrix(@element_.style.webkitTransform))
+      @_matrix || (@_matrix = new CSSMatrix(@element_.style.webkitTransform))
     },
     set: ^{
       M = @_matrix = arguments[0]
-      if (!M || !(M instanceof WebKitCSSMatrix)) {
+      if (!M || !(M instanceof CSSMatrix)) {
         @_matrix = null
         @element_.style.webkitTransform = null
       } else {
