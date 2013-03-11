@@ -130,6 +130,21 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
     camelCase !== null && typeof camelCase === "object" && camelCase.__kw === _MoveKWArgsT && (arguments.keywords = camelCase, camelCase = camelCase.camelCase);
     return prefixed.lookup.js[camelCase];
   };
+  prefixed.features.addTest("transform_origin_3d", function () {
+    var propTransform, propOrigin, cssRule, test3ValueSyntaxSupport;
+    propTransform = prefixed.lookup.css.transform;
+    propOrigin = prefixed.lookup.css["transform-origin"];
+    cssRule = "#modernizr { " + propOrigin + ": 1px 2% 3em;" + propTransform + ": rotateY(50deg);" + " }";
+    test3ValueSyntaxSupport = function test3ValueSyntaxSupport(elem, rule) {
+      elem !== null && typeof elem === "object" && elem.__kw === _MoveKWArgsT && (arguments.keywords = elem, rule = elem.rule, elem = elem.elem);
+      var computed, property, value;
+      computed = getComputedStyle(elem);
+      property = prefixed.lookup.js.transformOrigin;
+      value = computed[property];
+      return value.split(" ").length === 3;
+    };
+    return prefixed.features.testStyles(cssRule, test3ValueSyntaxSupport);
+  });
   module.exports = UILayer = __class(UILayer = function UILayer() {
     return __class.create(UILayer, arguments);
   }, {
