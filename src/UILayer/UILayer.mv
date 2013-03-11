@@ -734,7 +734,7 @@ UILayer.textureBackedProperties = {
       if (v = @element_.style.getPropertyCSSValue lookupCSS 'transform-origin-y')
         point[1] = v.getFloatValue(v.primitiveType)/100
       if (v = @element_.style.getPropertyCSSValue lookupCSS 'transform-origin-z')
-        point[3] = v.getFloatValue(v.primitiveType)/100
+        point[2] = v.getFloatValue(v.primitiveType)/100
       point
     },
     set: ^(origin) {
