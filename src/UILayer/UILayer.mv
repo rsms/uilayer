@@ -116,6 +116,25 @@ import prefixed
 lookupCSS = ^(dashed) { prefixed.lookup.css[dashed] }
 lookupJS = ^(camelCase) { prefixed.lookup.js[camelCase] }
 
+# does the client support the 3 value syntax for `transform-origin`?
+prefixed.features.addTest('transform_origin_3d', ^{
+  propTransform = prefixed.lookup.css.transform;
+  propOrigin = prefixed.lookup.css['transform-origin'];
+  cssRule = '#modernizr { '
+    + propOrigin    + ': 1px 2% 3em;'
+    + propTransform + ': rotateY(50deg);'
+    + ' }';
+  test3ValueSyntaxSupport = ^(elem, rule) {
+    computed = getComputedStyle(elem);
+    property = prefixed.lookup.js.transformOrigin;
+    value = computed[ property ];
+
+    value.split(' ').length === 3;
+  };
+
+  prefixed.features.testStyles(cssRule, test3ValueSyntaxSupport);
+});
+
 module.exports = UILayer = class {
   constructor: ^{
     # keyword arguments or an object as the first argument are explicit values
