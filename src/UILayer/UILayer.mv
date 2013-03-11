@@ -753,8 +753,8 @@ UILayer.textureBackedProperties = {
       origin = @element_.style[shorthand]
       if (origin) {
         origin = origin.split(' ')
-        origin[0] = parseInt(origin[0] || defaultOrigin[0]) / 100
-        origin[1] = parseInt(origin[1] || defaultOrigin[1]) / 100
+        origin[0] = (parseInt(origin[0]) / 100) || defaultOrigin[0]
+        origin[1] = (parseInt(origin[1]) / 100) || defaultOrigin[1]
       } else {
         origin = defaultOrigin
       }
