@@ -747,36 +747,34 @@ UILayer.textureBackedProperties = {
   # Origin for transformations (e.g. scaling) in the layer's own coordinates.
   transformOrigin: {
     get: ^{
-      point = [0.5, 0.5, 0]
-      if (v = @element_.style.getPropertyCSSValue lookupCSS 'transform-origin-x')
-        point[0] = v.getFloatValue(v.primitiveType)/100
-      if (v = @element_.style.getPropertyCSSValue lookupCSS 'transform-origin-y')
-        point[1] = v.getFloatValue(v.primitiveType)/100
-      if (v = @element_.style.getPropertyCSSValue lookupCSS 'transform-origin-z')
-        point[2] = v.getFloatValue(v.primitiveType)/100
-      point
+
+      defaultOrigin = [0.5, 0.5, 0]
+      shorthand = lookupJS('transformOrigin')
+      origin = @element_.style[shorthand]
+      if (origin) {
+        origin = origin.split(' ')
+        origin[0] = parseInt(origin[0] || defaultOrigin[0]) / 100
+        origin[1] = parseInt(origin[1] || defaultOrigin[1]) / 100
+      } else {
+        origin = defaultOrigin
+      }
+
+      origin
     },
     set: ^(origin) {
+      defaultOrigin = [0.5, 0.5, 0]
       style = @element_.style
-      xProperty = lookupCSS 'transform-origin-x'
-      if (origin[0] == 0.5 || origin[0] == undefined) {
-        style.removeProperty xProperty
-      } else {
-        style.setProperty xProperty, (100*origin[0]).toFixed(0)+'%', null
-      }
 
-      yProperty = lookupCSS 'transform-origin-y'
-      if (origin[1] == 0.5 || origin[1] == undefined) {
-        style.removeProperty yProperty
-      } else {
-        style.setProperty yProperty, (100*origin[1]).toFixed(0)+'%', null
-      }
+      if (origin[0] !== defaultOrigin[0]) origin[0] = (100*origin[0]).toFixed(0)+'%'
+      if (origin[1] !== defaultOrigin[1]) origin[1] = (100*origin[1]).toFixed(0)+'%'
 
-      zProperty = lookupCSS 'transform-origin-z'
-      if (origin[2] == 0 || origin[2] == undefined) {
-        style.removeProperty zProperty
+      # always use the shorthand property
+      # b/c support for the individual properties isn't always present
+      shorthand = lookupCSS('transform-origin')
+      if (prefixed.features.transform_origin_3d) {
+        style.setProperty shorthand, origin.join(' ');
       } else {
-        style.setProperty zProperty, (100*origin[2]).toFixed(0)+'%', null
+        style.setProperty shorthand, origin[0] + ' ' + origin[1];
       }
     }
   },
@@ -1166,7 +1164,7 @@ baseStyle.appendChild document.createTextNode '.uilayer {'+
 '}\n'+
 '.uilayer.textureBacked {'+
 '  ' + lookupCSS('transform') + ': matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);'+
-'  ' + lookupCSS('transform-origin') + ': 50% 50% 0%;'+
+'  ' + lookupCSS('transform-origin') + ': 50% 50% 0;'+
 '  ' + lookupCSS('backface-visibility') + ': hidden;'+
 '  ' + lookupCSS('transform-style') + ': flat;'+
 '}\n'+

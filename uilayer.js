@@ -780,34 +780,31 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
     },
     transformOrigin: {
       get: function () {
-        var point, v;
-        point = [ .5, .5, 0 ];
-        if (v = this.element_.style.getPropertyCSSValue(lookupCSS("transform-origin-x"))) point[0] = v.getFloatValue(v.primitiveType) / 100;
-        if (v = this.element_.style.getPropertyCSSValue(lookupCSS("transform-origin-y"))) point[1] = v.getFloatValue(v.primitiveType) / 100;
-        if (v = this.element_.style.getPropertyCSSValue(lookupCSS("transform-origin-z"))) point[2] = v.getFloatValue(v.primitiveType) / 100;
-        return point;
+        var defaultOrigin, shorthand, origin;
+        defaultOrigin = [ .5, .5, 0 ];
+        shorthand = lookupJS("transformOrigin");
+        origin = this.element_.style[shorthand];
+        if (origin) {
+          origin = origin.split(" ");
+          origin[0] = parseInt(origin[0] || defaultOrigin[0]) / 100;
+          origin[1] = parseInt(origin[1] || defaultOrigin[1]) / 100;
+        } else {
+          origin = defaultOrigin;
+        }
+        return origin;
       },
       set: function (origin) {
         origin !== null && typeof origin === "object" && origin.__kw === _MoveKWArgsT && (arguments.keywords = origin, origin = origin.origin);
-        var style, xProperty, yProperty, zProperty;
+        var defaultOrigin, style, shorthand;
+        defaultOrigin = [ .5, .5, 0 ];
         style = this.element_.style;
-        xProperty = lookupCSS("transform-origin-x");
-        if (origin[0] === .5 || origin[0] === undefined) {
-          style.removeProperty(xProperty);
+        if (origin[0] !== defaultOrigin[0]) origin[0] = (100 * origin[0]).toFixed(0) + "%";
+        if (origin[1] !== defaultOrigin[1]) origin[1] = (100 * origin[1]).toFixed(0) + "%";
+        shorthand = lookupCSS("transform-origin");
+        if (prefixed.features.transform_origin_3d) {
+          return style.setProperty(shorthand, origin.join(" "));
         } else {
-          style.setProperty(xProperty, (100 * origin[0]).toFixed(0) + "%", null);
-        }
-        yProperty = lookupCSS("transform-origin-y");
-        if (origin[1] === .5 || origin[1] === undefined) {
-          style.removeProperty(yProperty);
-        } else {
-          style.setProperty(yProperty, (100 * origin[1]).toFixed(0) + "%", null);
-        }
-        zProperty = lookupCSS("transform-origin-z");
-        if (origin[2] === 0 || origin[2] === undefined) {
-          return style.removeProperty(zProperty);
-        } else {
-          return style.setProperty(zProperty, (100 * origin[2]).toFixed(0) + "%", null);
+          return style.setProperty(shorthand, origin[0] + " " + origin[1]);
         }
       }
     },
@@ -1212,7 +1209,7 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   if ((head = document.getElementsByTagName("head")).length) head = head[0]; else head = document.body || document.documentElement;
   baseStyle = document.createElement("style");
   baseStyle.id = "UILayer-base-style";
-  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  visibility: visible;" + "  position: absolute;" + "  top:auto; right:auto; bottom:auto; left:auto;" + "  width:auto; height:auto;" + "  overflow: visible;" + "  z-index:0;" + "  opacity:1;" + "  " + lookupCSS("box-sizing") + ": border-box;" + "}\n" + ".uilayer.textureBacked {" + "  " + lookupCSS("transform") + ": matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);" + "  " + lookupCSS("transform-origin") + ": 50% 50% 0%;" + "  " + lookupCSS("backface-visibility") + ": hidden;" + "  " + lookupCSS("transform-style") + ": flat;" + "}\n" + ".uilayer.animated {" + "  " + lookupCSS("transition-duration") + ": 500ms;" + "  " + lookupCSS("transition-timing-function") + ": ease;" + "  " + lookupCSS("transition-delay") + ": 0s;" + "  " + lookupCSS("transition-property") + ": none;" + "}"));
+  baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  visibility: visible;" + "  position: absolute;" + "  top:auto; right:auto; bottom:auto; left:auto;" + "  width:auto; height:auto;" + "  overflow: visible;" + "  z-index:0;" + "  opacity:1;" + "  " + lookupCSS("box-sizing") + ": border-box;" + "}\n" + ".uilayer.textureBacked {" + "  " + lookupCSS("transform") + ": matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);" + "  " + lookupCSS("transform-origin") + ": 50% 50% 0;" + "  " + lookupCSS("backface-visibility") + ": hidden;" + "  " + lookupCSS("transform-style") + ": flat;" + "}\n" + ".uilayer.animated {" + "  " + lookupCSS("transition-duration") + ": 500ms;" + "  " + lookupCSS("transition-timing-function") + ": ease;" + "  " + lookupCSS("transition-delay") + ": 0s;" + "  " + lookupCSS("transition-property") + ": none;" + "}"));
   return head.appendChild(baseStyle);
 });
 Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,module,exports){
@@ -1673,6 +1670,23 @@ function toMatrixString(transformString) {
 }
 
 module.exports = XCSSMatrix;});
+Move.require.define("XCSSMatrix/angleUtils","XCSSMatrix/angleUtils.js",function(require,module,exports){function deg2rad(angle) {
+  return angle * Math.PI / 180;
+}
+
+function rad2deg(radians) {
+  return radians * (180 / Math.PI);
+}
+
+function grad2deg(gradians) {
+  return gradians / (400 / 360);
+}
+
+module.exports = {
+  deg2rad: deg2rad,
+  rad2deg: rad2deg,
+  grad2deg: grad2deg
+};});
 Move.require.define("XCSSMatrix/cssTransformStringUtils","XCSSMatrix/cssTransformStringUtils.js",function(require,module,exports){var utils = {
   angles: require("./angleUtils")
 };
@@ -1712,23 +1726,6 @@ module.exports = {
   valueToObject: valueToObject,
   statementToObject: statementToObject,
   stringToStatements: stringToStatements
-};});
-Move.require.define("XCSSMatrix/angleUtils","XCSSMatrix/angleUtils.js",function(require,module,exports){function deg2rad(angle) {
-  return angle * Math.PI / 180;
-}
-
-function rad2deg(radians) {
-  return radians * (180 / Math.PI);
-}
-
-function grad2deg(gradians) {
-  return gradians / (400 / 360);
-}
-
-module.exports = {
-  deg2rad: deg2rad,
-  rad2deg: rad2deg,
-  grad2deg: grad2deg
 };});
 Move.require.define("XCSSMatrix/matrixUtils","XCSSMatrix/matrixUtils.js",function(require,module,exports){function determinant2x2(a, b, c, d) {
   return a * d - b * c;
