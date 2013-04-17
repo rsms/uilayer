@@ -31,7 +31,15 @@ document.body.appendChild(layer1.<a href="#dom">element</a>)</code></pre>
 
 ## Usage
 
-Either use the precompiled [uilayer.js](https://raw.github.com/rsms/uilayer/master/uilayer.js) JavaScript library together with the [Move runtime](http://movelang.org/move-rt.js) or use the [Move](http://movelang.org/) source files in the "src" directory directly.
+If you use [Move](http://movelang.org/), either use the precompiled [uilayer.js](https://raw.github.com/rsms/uilayer/master/uilayer.js) or use the Move source files in the "src" directory directly.
+
+If you don't use Move, use [uilayer-standalone.js](https://raw.github.com/rsms/uilayer/master/uilayer-standalone.js) JavaScript library.
+
+    <script src="https://raw.github.com/rsms/uilayer/master/uilayer-standalone.js"></script>
+    <script>
+    var UILayer = Move.require('UILayer');
+    ...
+    </script>
 
 You can also build a JavaScript library from the source files (requires [move](http://movelang.org/) >=0.4.4):
 
