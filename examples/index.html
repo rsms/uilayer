@@ -91,17 +91,17 @@
       <li>transformOrigin</li>
     </ul>
     <div id="source"><h4></h4><pre class="prettyprint lang-html"></pre><a title="Close" class="close" href="javascript:closeSource()">×</a></div>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
     <script>
+      var $sourcePane = jQuery('#source');
+      var $title       = $sourcePane.find('h4');
+      var $pre         = $sourcePane.find('pre');
       function viewSource(path) {
-        var sourcePane = document.getElementById('source');
-        var title = sourcePane.childNodes[0];
-        var pre = sourcePane.childNodes[1];
-        sourcePane.className = 'open';
-        pre.style.opacity = '0'
-        title.innerText = path;
+        $sourcePane.addClass('open');
+        $pre.css({opacity: 0});
+        $title.text(path);
         $.get(path+'?'+(+new Date), function (body) {
-          
+
           // skip outer
           var lang = 'html';
           if (body.match(/<body>\s*<\/body>/)) {
@@ -115,29 +115,25 @@
           }
 
           // hacky and ugly, but feels kind of nice...
-          pre.style.opacity = '1'
-          pre.innerText = body;
-          pre.className = 'prettyprint lang-'+lang
+          $pre.css({opacity: 1});
+          $pre.text(body);
+          $pre.addClass('prettyprint lang-'+lang);
           prettyPrint();
         });
       }
-    
+
       function closeSource() {
-        var sourcePane = document.getElementById('source');
-        sourcePane.className = '';
+        $sourcePane.get(0).className = '';
       }
-    
-      var i, url, li, ul = document.getElementsByTagName('ul')[0];
-      for (i = 0; i < ul.childNodes.length; ++i) {
-        if ( (li = ul.childNodes[i]) && (li.nodeType === Node.ELEMENT_NODE) ) {
-          url = li.innerText;
-          html = '<a href="'+url+'.html">'+url+'</a>'
-          //if (navigator.userAgent.indexOf('Chrome') !== -1) {
-            html += ' &nbsp; (<a href="javascript:viewSource(\''+url+'\')">view source</a>)';
-          //}
-          li.innerHTML = html
-        }
-      }
+
+      var $ul = $('ul');
+      var $lis = $ul.find('li');
+      $lis.each(function (i, li) {
+        var url = $(li).text();
+        var html = '<a href="'+url+'.html">'+url+'</a>'
+        html += ' &nbsp; (<a href="javascript:viewSource(\''+url+'\')">view source</a>)';
+        li.innerHTML = html
+      })
     </script>
   </body>
 </html>
