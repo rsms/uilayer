@@ -86,6 +86,13 @@ Move.require.define("UILayer/UIFrame","UILayer/UIFrame.mv",function(require,modu
     }
   });
 });
+Move.require.define("UILayer","UILayer/index.mv",function(require,module,exports){
+  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, version;
+  M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
+  EHTML = Move.EHTML;
+  module.exports = exports = require("./UILayer");
+  exports.version = version = "0.0.6";
+});
 Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,module,exports){
   var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, UIFrame, classNames, addClassName, hasClassName, removeClassName, DEPRECATED_WARN, DEPRECATED_PROPERTY_WARNINGS, DEPRECATED_PROPERTY, _canonicalColor, _swapElement, kSpecialProperties, prefixed, lookupCSS, lookupJS, UILayer, CSSMatrix, XCSSMatrix, isTouchDevice, touchEventsToMouseEvents, makeFakeTouchEvent, UIEvent, FocusEvent, MouseEvent, TouchEvent, WheelEvent, TextEvent, KeyboardEvent, CompositionEvent, MutationEvent, MutationNameEvent, CustomEvent, TransitionEvent, kEventClasses, RotationProxy, head, baseStyle;
   M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
@@ -1300,13 +1307,145 @@ Move.require.define("UILayer/UILayer","UILayer/UILayer.mv",function(require,modu
   baseStyle.appendChild(document.createTextNode(".uilayer {" + "  display: block;" + "  visibility: visible;" + "  position: absolute;" + "  top:auto; right:auto; bottom:auto; left:auto;" + "  width:auto; height:auto;" + "  overflow: visible;" + "  z-index:0;" + "  opacity:1;" + "  " + lookupCSS("box-sizing") + ": border-box;" + "}\n" + ".uilayer.textureBacked {" + "  " + lookupCSS("transform") + ": matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);" + "  " + lookupCSS("transform-origin") + ": 50% 50% 0;" + "  " + lookupCSS("backface-visibility") + ": hidden;" + "  " + lookupCSS("transform-style") + ": flat;" + "}\n" + ".uilayer.animated {" + "  " + lookupCSS("transition-duration") + ": 500ms;" + "  " + lookupCSS("transition-timing-function") + ": ease;" + "  " + lookupCSS("transition-delay") + ": 0s;" + "  " + lookupCSS("transition-property") + ": none;" + "}"));
   return head.appendChild(baseStyle);
 });
-Move.require.define("UILayer","UILayer/index.mv",function(require,module,exports){
-  var M, _MoveKWArgsT, Text, extend, create, print, dprint, repeat, after, JSON, __class, EventEmitter, EHTML, version;
-  M = Move.runtime, _MoveKWArgsT = M._MoveKWArgsT, Text = M.Text, extend = M.extend, create = M.create, print = M.print, dprint = M.dprinter(module), repeat = M.repeat, after = M.after, JSON = M.JSON, __class = M.__class, EventEmitter = M.EventEmitter;
-  EHTML = Move.EHTML;
-  module.exports = exports = require("./UILayer");
-  exports.version = version = "0.0.6";
-});
+Move.require.define("XCSSMatrix/angleUtils","XCSSMatrix/angleUtils.js",function(require,module,exports){function deg2rad(angle) {
+  return angle * Math.PI / 180;
+}
+
+function rad2deg(radians) {
+  return radians * (180 / Math.PI);
+}
+
+function grad2deg(gradians) {
+  return gradians / (400 / 360);
+}
+
+module.exports = {
+  deg2rad: deg2rad,
+  rad2deg: rad2deg,
+  grad2deg: grad2deg
+};});
+Move.require.define("XCSSMatrix/cssTransformStringUtils","XCSSMatrix/cssTransformStringUtils.js",function(require,module,exports){var utils = {
+  angles: require("./angleUtils")
+};
+
+function valueToObject(value) {
+  var units = /([\-\+]?[0-9]+[\.0-9]*)(deg|rad|grad|px|%)*/;
+  var parts = value.match(units) || [];
+  return {
+    value: parseFloat(parts[1]),
+    units: parts[2],
+    unparsed: value
+  };
+}
+
+function statementToObject(statement, skipValues) {
+  var nameAndArgs = /(\w+)\(([^\)]+)\)/i;
+  var statementParts = statement.toString().match(nameAndArgs).slice(1);
+  var functionName = statementParts[0];
+  var stringValues = statementParts[1].split(/, ?/);
+  var parsedValues = !skipValues && stringValues.map(valueToObject);
+  return {
+    key: functionName,
+    value: parsedValues || stringValues,
+    unparsed: statement
+  };
+}
+
+function stringToStatements(transformString) {
+  var functionSignature = /(\w+)\([^\)]+\)/ig;
+  var transformStatements = transformString.match(functionSignature) || [];
+  return transformStatements;
+}
+
+module.exports = {
+  matrixFn2d: "matrix",
+  matrixFn3d: "matrix3d",
+  valueToObject: valueToObject,
+  statementToObject: statementToObject,
+  stringToStatements: stringToStatements
+};});
+Move.require.define("XCSSMatrix/matrixUtils","XCSSMatrix/matrixUtils.js",function(require,module,exports){function determinant2x2(a, b, c, d) {
+  return a * d - b * c;
+}
+
+function determinant3x3(a1, a2, a3, b1, b2, b3, c1, c2, c3) {
+  return a1 * determinant2x2(b2, b3, c2, c3) - b1 * determinant2x2(a2, a3, c2, c3) + c1 * determinant2x2(a2, a3, b2, b3);
+}
+
+function determinant4x4(matrix) {
+  var m = matrix, a1 = m.m11, b1 = m.m21, c1 = m.m31, d1 = m.m41, a2 = m.m12, b2 = m.m22, c2 = m.m32, d2 = m.m42, a3 = m.m13, b3 = m.m23, c3 = m.m33, d3 = m.m43, a4 = m.m14, b4 = m.m24, c4 = m.m34, d4 = m.m44;
+  return a1 * determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4) - b1 * determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4) + c1 * determinant3x3(a2, a3, a4, b2, b3, b4, d2, d3, d4) - d1 * determinant3x3(a2, a3, a4, b2, b3, b4, c2, c3, c4);
+}
+
+function isAffine(matrix) {
+  return matrix.m13 === 0 && matrix.m14 === 0 && matrix.m23 === 0 && matrix.m24 === 0 && matrix.m31 === 0 && matrix.m32 === 0 && matrix.m33 === 1 && matrix.m34 === 0 && matrix.m43 === 0 && matrix.m44 === 1;
+}
+
+function isIdentityOrTranslation(matrix) {
+  var m = matrix;
+  return m.m11 === 1 && m.m12 === 0 && m.m13 === 0 && m.m14 === 0 && m.m21 === 0 && m.m22 === 1 && m.m23 === 0 && m.m24 === 0 && m.m31 === 0 && m.m31 === 0 && m.m33 === 1 && m.m34 === 0 && m.m44 === 1;
+}
+
+function adjoint(matrix) {
+  var m = matrix, result = new matrix.constructor, a1 = m.m11, b1 = m.m12, c1 = m.m13, d1 = m.m14, a2 = m.m21, b2 = m.m22, c2 = m.m23, d2 = m.m24, a3 = m.m31, b3 = m.m32, c3 = m.m33, d3 = m.m34, a4 = m.m41, b4 = m.m42, c4 = m.m43, d4 = m.m44;
+  result.m11 = determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4);
+  result.m21 = -determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4);
+  result.m31 = determinant3x3(a2, a3, a4, b2, b3, b4, d2, d3, d4);
+  result.m41 = -determinant3x3(a2, a3, a4, b2, b3, b4, c2, c3, c4);
+  result.m12 = -determinant3x3(b1, b3, b4, c1, c3, c4, d1, d3, d4);
+  result.m22 = determinant3x3(a1, a3, a4, c1, c3, c4, d1, d3, d4);
+  result.m32 = -determinant3x3(a1, a3, a4, b1, b3, b4, d1, d3, d4);
+  result.m42 = determinant3x3(a1, a3, a4, b1, b3, b4, c1, c3, c4);
+  result.m13 = determinant3x3(b1, b2, b4, c1, c2, c4, d1, d2, d4);
+  result.m23 = -determinant3x3(a1, a2, a4, c1, c2, c4, d1, d2, d4);
+  result.m33 = determinant3x3(a1, a2, a4, b1, b2, b4, d1, d2, d4);
+  result.m43 = -determinant3x3(a1, a2, a4, b1, b2, b4, c1, c2, c4);
+  result.m14 = -determinant3x3(b1, b2, b3, c1, c2, c3, d1, d2, d3);
+  result.m24 = determinant3x3(a1, a2, a3, c1, c2, c3, d1, d2, d3);
+  result.m34 = -determinant3x3(a1, a2, a3, b1, b2, b3, d1, d2, d3);
+  result.m44 = determinant3x3(a1, a2, a3, b1, b2, b3, c1, c2, c3);
+  return result;
+}
+
+module.exports = {
+  determinant2x2: determinant2x2,
+  determinant3x3: determinant3x3,
+  determinant4x4: determinant4x4,
+  isAffine: isAffine,
+  isIdentityOrTranslation: isIdentityOrTranslation,
+  adjoint: adjoint
+};});
+Move.require.define("prefixed","prefixed/index.js",function(require,module,exports){module.exports.features = require("./Modernizr");
+
+module.exports.dashedToCamelCase = function(dashed) {
+  return dashed.replace(/(\-[a-z])/g, function(match, p1, offset, string) {
+    return (offset === 0 ? p1.toLowerCase() : p1.toUpperCase()).replace("-", "");
+  });
+};
+
+module.exports.camelCaseToDashed = function(camelCase) {
+  return camelCase.replace(/([A-Z])/g, function(str, m1) {
+    return "-" + m1.toLowerCase();
+  }).replace(/^ms-/, "-ms-");
+};
+
+var lookup = module.exports.lookup = {
+  css: {},
+  js: {}
+};
+
+module.exports.addProperty = function(dashedOrCamelCase) {
+  var camelCase = module.exports.dashedToCamelCase(dashedOrCamelCase);
+  var dashed = module.exports.camelCaseToDashed(camelCase);
+  var prefixedCC = module.exports.features.prefixed(camelCase);
+  module.exports.lookup.js[camelCase] = prefixedCC;
+  if (prefixedCC) {
+    module.exports.lookup.css[dashed] = module.exports.camelCaseToDashed(prefixedCC);
+  } else {
+    module.exports.lookup.css[dashed] = prefixedCC;
+    console.log("no support for", dashed, camelCase, prefixedCC);
+  }
+};});
 Move.require.define("XCSSMatrix/XCSSMatrix","XCSSMatrix/XCSSMatrix.js",function(require,module,exports){var utils = {
   angles: require("./angleUtils"),
   matrix: require("./matrixUtils"),
@@ -1670,114 +1809,6 @@ function toMatrixString(transformString) {
 }
 
 module.exports = XCSSMatrix;});
-Move.require.define("XCSSMatrix/angleUtils","XCSSMatrix/angleUtils.js",function(require,module,exports){function deg2rad(angle) {
-  return angle * Math.PI / 180;
-}
-
-function rad2deg(radians) {
-  return radians * (180 / Math.PI);
-}
-
-function grad2deg(gradians) {
-  return gradians / (400 / 360);
-}
-
-module.exports = {
-  deg2rad: deg2rad,
-  rad2deg: rad2deg,
-  grad2deg: grad2deg
-};});
-Move.require.define("XCSSMatrix/cssTransformStringUtils","XCSSMatrix/cssTransformStringUtils.js",function(require,module,exports){var utils = {
-  angles: require("./angleUtils")
-};
-
-function valueToObject(value) {
-  var units = /([\-\+]?[0-9]+[\.0-9]*)(deg|rad|grad|px|%)*/;
-  var parts = value.match(units) || [];
-  return {
-    value: parseFloat(parts[1]),
-    units: parts[2],
-    unparsed: value
-  };
-}
-
-function statementToObject(statement, skipValues) {
-  var nameAndArgs = /(\w+)\(([^\)]+)\)/i;
-  var statementParts = statement.toString().match(nameAndArgs).slice(1);
-  var functionName = statementParts[0];
-  var stringValues = statementParts[1].split(/, ?/);
-  var parsedValues = !skipValues && stringValues.map(valueToObject);
-  return {
-    key: functionName,
-    value: parsedValues || stringValues,
-    unparsed: statement
-  };
-}
-
-function stringToStatements(transformString) {
-  var functionSignature = /(\w+)\([^\)]+\)/ig;
-  var transformStatements = transformString.match(functionSignature) || [];
-  return transformStatements;
-}
-
-module.exports = {
-  matrixFn2d: "matrix",
-  matrixFn3d: "matrix3d",
-  valueToObject: valueToObject,
-  statementToObject: statementToObject,
-  stringToStatements: stringToStatements
-};});
-Move.require.define("XCSSMatrix/matrixUtils","XCSSMatrix/matrixUtils.js",function(require,module,exports){function determinant2x2(a, b, c, d) {
-  return a * d - b * c;
-}
-
-function determinant3x3(a1, a2, a3, b1, b2, b3, c1, c2, c3) {
-  return a1 * determinant2x2(b2, b3, c2, c3) - b1 * determinant2x2(a2, a3, c2, c3) + c1 * determinant2x2(a2, a3, b2, b3);
-}
-
-function determinant4x4(matrix) {
-  var m = matrix, a1 = m.m11, b1 = m.m21, c1 = m.m31, d1 = m.m41, a2 = m.m12, b2 = m.m22, c2 = m.m32, d2 = m.m42, a3 = m.m13, b3 = m.m23, c3 = m.m33, d3 = m.m43, a4 = m.m14, b4 = m.m24, c4 = m.m34, d4 = m.m44;
-  return a1 * determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4) - b1 * determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4) + c1 * determinant3x3(a2, a3, a4, b2, b3, b4, d2, d3, d4) - d1 * determinant3x3(a2, a3, a4, b2, b3, b4, c2, c3, c4);
-}
-
-function isAffine(matrix) {
-  return matrix.m13 === 0 && matrix.m14 === 0 && matrix.m23 === 0 && matrix.m24 === 0 && matrix.m31 === 0 && matrix.m32 === 0 && matrix.m33 === 1 && matrix.m34 === 0 && matrix.m43 === 0 && matrix.m44 === 1;
-}
-
-function isIdentityOrTranslation(matrix) {
-  var m = matrix;
-  return m.m11 === 1 && m.m12 === 0 && m.m13 === 0 && m.m14 === 0 && m.m21 === 0 && m.m22 === 1 && m.m23 === 0 && m.m24 === 0 && m.m31 === 0 && m.m31 === 0 && m.m33 === 1 && m.m34 === 0 && m.m44 === 1;
-}
-
-function adjoint(matrix) {
-  var m = matrix, result = new matrix.constructor, a1 = m.m11, b1 = m.m12, c1 = m.m13, d1 = m.m14, a2 = m.m21, b2 = m.m22, c2 = m.m23, d2 = m.m24, a3 = m.m31, b3 = m.m32, c3 = m.m33, d3 = m.m34, a4 = m.m41, b4 = m.m42, c4 = m.m43, d4 = m.m44;
-  result.m11 = determinant3x3(b2, b3, b4, c2, c3, c4, d2, d3, d4);
-  result.m21 = -determinant3x3(a2, a3, a4, c2, c3, c4, d2, d3, d4);
-  result.m31 = determinant3x3(a2, a3, a4, b2, b3, b4, d2, d3, d4);
-  result.m41 = -determinant3x3(a2, a3, a4, b2, b3, b4, c2, c3, c4);
-  result.m12 = -determinant3x3(b1, b3, b4, c1, c3, c4, d1, d3, d4);
-  result.m22 = determinant3x3(a1, a3, a4, c1, c3, c4, d1, d3, d4);
-  result.m32 = -determinant3x3(a1, a3, a4, b1, b3, b4, d1, d3, d4);
-  result.m42 = determinant3x3(a1, a3, a4, b1, b3, b4, c1, c3, c4);
-  result.m13 = determinant3x3(b1, b2, b4, c1, c2, c4, d1, d2, d4);
-  result.m23 = -determinant3x3(a1, a2, a4, c1, c2, c4, d1, d2, d4);
-  result.m33 = determinant3x3(a1, a2, a4, b1, b2, b4, d1, d2, d4);
-  result.m43 = -determinant3x3(a1, a2, a4, b1, b2, b4, c1, c2, c4);
-  result.m14 = -determinant3x3(b1, b2, b3, c1, c2, c3, d1, d2, d3);
-  result.m24 = determinant3x3(a1, a2, a3, c1, c2, c3, d1, d2, d3);
-  result.m34 = -determinant3x3(a1, a2, a3, b1, b2, b3, d1, d2, d3);
-  result.m44 = determinant3x3(a1, a2, a3, b1, b2, b3, c1, c2, c3);
-  return result;
-}
-
-module.exports = {
-  determinant2x2: determinant2x2,
-  determinant3x3: determinant3x3,
-  determinant4x4: determinant4x4,
-  isAffine: isAffine,
-  isIdentityOrTranslation: isIdentityOrTranslation,
-  adjoint: adjoint
-};});
 Move.require.define("prefixed/Modernizr","prefixed/Modernizr.js",function(require,module,exports){module.exports = function(window, document, undefined) {
   var Modernizr = {}, docElement = document.documentElement, mod = "modernizr", modElem = document.createElement(mod), mStyle = modElem.style, inputElem, toString = {}.toString, prefixes = " -webkit- -moz- -o- -ms- ".split(" "), omPrefixes = "Webkit Moz O ms", cssomPrefixes = omPrefixes.split(" "), domPrefixes = omPrefixes.toLowerCase().split(" "), tests = {}, inputs = {}, attrs = {}, classes = [], slice = classes.slice, featureName, _hasOwnProperty = {}.hasOwnProperty, hasOwnProp;
   if (!is(_hasOwnProperty, "undefined") && !is(_hasOwnProperty.call, "undefined")) {
@@ -1923,34 +1954,3 @@ Move.require.define("prefixed/Modernizr","prefixed/Modernizr.js",function(requir
   };
   return Modernizr;
 }(this, this.document);});
-Move.require.define("prefixed","prefixed/index.js",function(require,module,exports){module.exports.features = require("./Modernizr");
-
-module.exports.dashedToCamelCase = function(dashed) {
-  return dashed.replace(/(\-[a-z])/g, function(match, p1, offset, string) {
-    return (offset === 0 ? p1.toLowerCase() : p1.toUpperCase()).replace("-", "");
-  });
-};
-
-module.exports.camelCaseToDashed = function(camelCase) {
-  return camelCase.replace(/([A-Z])/g, function(str, m1) {
-    return "-" + m1.toLowerCase();
-  }).replace(/^ms-/, "-ms-");
-};
-
-var lookup = module.exports.lookup = {
-  css: {},
-  js: {}
-};
-
-module.exports.addProperty = function(dashedOrCamelCase) {
-  var camelCase = module.exports.dashedToCamelCase(dashedOrCamelCase);
-  var dashed = module.exports.camelCaseToDashed(camelCase);
-  var prefixedCC = module.exports.features.prefixed(camelCase);
-  module.exports.lookup.js[camelCase] = prefixedCC;
-  if (prefixedCC) {
-    module.exports.lookup.css[dashed] = module.exports.camelCaseToDashed(prefixedCC);
-  } else {
-    module.exports.lookup.css[dashed] = prefixedCC;
-    console.log("no support for", dashed, camelCase, prefixedCC);
-  }
-};});
