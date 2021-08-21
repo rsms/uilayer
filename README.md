@@ -5,10 +5,10 @@ UILayer provides a JavaScript API on top of WebKit **for working with the concep
 
 ## Demo and example
 
-- [Psychotic layers randomly moving around](http://rsms.me/uilayer/examples/animate-combo.html)
-- [Flip some pages in the Flip Book](http://rsms.me/uilayer/examples/flip-book.html)
-- [Interactive 3D perspective](http://rsms.me/uilayer/examples/perspective.html)
-- [More examples...](http://rsms.me/uilayer/examples/)
+- [Psychotic layers randomly moving around](examples/animate-combo.html)
+- [Flip some pages in the Flip Book](examples/flip-book.html)
+- [Interactive 3D perspective](examples/perspective.html)
+- [More examples...](examples/)
 
 > Note: UILayer only works in WebKit-based environments, such as web views on Apple iOS, OS X and Android or in web browsers like Google Chrome and Safari.
 
@@ -26,12 +26,12 @@ layer1.<a href="#handling-events">on('touchstart'</a>, function () {
 document.body.appendChild(layer1.<a href="#dom">element</a>)</code></pre>
 </div>
 
-[Try it (written in Move) →](http://rsms.me/uilayer/examples/example1.html)<br>
-[Try it (written in JavaScript) →](http://rsms.me/uilayer/examples/example1-javascript.html)
+[Try it (written in Move) →](examples/example1.html)<br>
+[Try it (written in JavaScript) →](examples/example1-javascript.html)
 
 ## Usage
 
-If you use [Move](http://movelang.org/), either use the precompiled [uilayer.js](https://raw.github.com/rsms/uilayer/master/uilayer.js) or use the Move source files in the "src" directory directly.
+If you use [Move](https://github.com/rsms/move/), either use the precompiled [uilayer.js](https://raw.github.com/rsms/uilayer/master/uilayer.js) or use the Move source files in the "src" directory directly.
 
 If you don't use Move, use [uilayer-standalone.js](https://raw.github.com/rsms/uilayer/master/uilayer-standalone.js) JavaScript library.
 
@@ -41,7 +41,7 @@ If you don't use Move, use [uilayer-standalone.js](https://raw.github.com/rsms/u
     ...
     </script>
 
-You can also build a JavaScript library from the source files (requires [move](http://movelang.org/) >=0.4.4):
+You can also build a JavaScript library from the source files (requires [move](https://github.com/rsms/move/) >=0.4.4):
 
     move compile -d src -o uilayer.js
 
@@ -93,7 +93,7 @@ Example of creating a layer that spans the width of its superlayer, attached to 
 
     layer = UILayer {anchor:'left bottom right', height:100}
 
-Example: [examples/anchor.html](http://rsms.me/uilayer/examples/anchor.html)
+Example: [examples/anchor.html](examples/anchor.html)
 
 
 ### layer.moveBy(x, y:0, z:0)
@@ -114,7 +114,7 @@ Example of setting several axis, causing a single change event to be emitted:
 
     layer.rotation = {x:20, z:45}
 
-Example: [examples/rotation.html](http://rsms.me/uilayer/examples/rotation.html)
+Example: [examples/rotation.html](examples/rotation.html)
 
 
 ### layer.scale ⇄ number (0-inf]
@@ -133,7 +133,7 @@ Defines the transformation origin of the layer's bounds rectangle. Affects how t
 
 Described in the unit coordinate space. Defaults to (0.5, 0.5, 0), the center of the bounds rectangle.
 
-Example: [examples/transformOrigin.html](http://rsms.me/uilayer/examples/transformOrigin.html)
+Example: [examples/transformOrigin.html](examples/transformOrigin.html)
 
 
 ### layer.zPosition ⇄ number
@@ -147,7 +147,7 @@ Layers with a larger zPosition will be placed in front of those with a smaller o
 
 If set to true, new layers will be assigned a random semi-opaque background color, aiding in development. Defaults to false.
 
-Example: [examples/debug.html](http://rsms.me/uilayer/examples/debug.html)
+Example: [examples/debug.html](examples/debug.html)
 
 ### layer.doubleSided ⇄ bool
 
@@ -196,7 +196,7 @@ Hide or show the layer. Defaults to false.
 
 A hidden view disappears from its window and does not receive input events. It remains in its superview’s list of sublayers, however, and participates in autoresizing as usual. Hiding a view with sublayers has the effect of hiding those sublayers and any view descendants they might have. This effect is implicit and does not alter the hidden state of the receiver’s descendants.
 
-If you want to know if a layer is in a DOM tree (no matter if it's visible), see [`layer.document`](http://rsms.me/uilayer/#layer.document-htmldocument).
+If you want to know if a layer is in a DOM tree (no matter if it's visible), see [`layer.document`](#layer.document-htmldocument).
 
 ### layer.computedStyle → Style
 
@@ -213,7 +213,7 @@ Determines whether sublayers are confined to the bounds of the receiver. Default
 
 Setting this value to true causes sublayers to be clipped to the bounds of the receiver. If set to false, sublayers whose frames extend beyond the visible bounds of the receiver are not clipped.
 
-Example: [examples/masksToBounds.html](http://rsms.me/uilayer/examples/masksToBounds.html)
+Example: [examples/masksToBounds.html](examples/masksToBounds.html)
 
 
 ### layer.perspective ⇄ number
@@ -222,9 +222,9 @@ Used to give an illusion of depth; it determines how layers change size based on
 
 Defaults to "none" (i.e. "no perspective" or "orthographic projection").
 
-The default origin for the perspective effect is the center of the layer, but you can control this with [`perspectiveOrigin`](http://rsms.me/uilayer/#layer.hidden-bool).
+The default origin for the perspective effect is the center of the layer, but you can control this with [`perspectiveOrigin`](#layer.hidden-bool).
 
-Example: [examples/perspective.html](http://rsms.me/uilayer/examples/perspective.html)
+Example: [examples/perspective.html](examples/perspective.html)
 
 
 ### layer.perspectiveOrigin ⇄ [x, y, z]
@@ -315,7 +315,7 @@ Example of drawing a triangle:
       g.stroke()
     }}
 
-Example: [examples/drawContent.html](http://rsms.me/uilayer/examples/drawContent.html)
+Example: [examples/drawContent.html](examples/drawContent.html)
 
 
 ### layer.graphicsContext2D → CanvasRenderingContext2D
@@ -379,7 +379,7 @@ Test if a layer is a sublayer of another layer.
 
 Returns the farthest descendant of the layer hierarchy that contains a specified point.
 
-Example: [examples/hitTest.html](http://rsms.me/uilayer/examples/hitTest.html)
+Example: [examples/hitTest.html](examples/hitTest.html)
 
 ### layer.excludedFromHitTesting ⇄ bool
 
@@ -402,7 +402,7 @@ The DOM document which this layer is owned by (created by). Note that a layer al
 
 The DOM document which this layer is currently presented in, if any. You can use this to test if the layer is part of the DOM tree or not.
 
-If you just want to know if a layer is visible or not, see [`layer.hidden`](http://rsms.me/uilayer/#layer.hidden-bool).
+If you just want to know if a layer is visible or not, see [`layer.hidden`](#layer.hidden-bool).
 
 
 ## Handling events
@@ -445,7 +445,7 @@ Indicates whether the layer is backed by high-performance 3D rendering or not.
 
 Assign a document-wide unique tag to this layer. This will effectively set `id="tag"` on the underlying element.
 
-Example: [examples/tag.html](http://rsms.me/uilayer/examples/tag.html)
+Example: [examples/tag.html](examples/tag.html)
 
 ### UILayer.layerWithTag(tag:string) → layer
 
