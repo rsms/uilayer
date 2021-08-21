@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=640,initial-scale=0.5,user-scalable=no">
+    <script src="../move.js"></script>
+    <script>document.write('<'+'script src="../uilayer.js?'+(+new Date)+'"><'+'/script>');</script>
+    <script type="text/move">
+
+import UILayer
+UILayer.debug = true
+rootLayer = UILayer {x:100, y:100, width:400, height:400}
+document.body.appendChild rootLayer.element
+
+# A clock layer that displays the current time
+ClockLayer = class UILayer, {
+  constructor: ^{
+    UILayer.prototype.constructor.apply this, arguments
+    @element = <div class="time">3:14<span class="mer">PM</span></div>
+    @style = {textAlign: 'right', color:'white', fontSize: '35px', lineHeight: '40px'}
+    @masksToBounds = true
+    @updateTime()
+  },
+
+  # Keep time up to date
+  updateTime: ^{
+    d = new Date
+    H = d.getHours()
+    if (H > 12) { mer = 'PM'; H -= 12 } else if (H == 12) mer = 'PM'; else mer = 'AM'
+    MM = d.getMinutes()
+    if (MM < 10) MM = '0'+MM
+    @element.innerHTML = H+':'+MM+'<span class="mer">'+mer+'</span>'
+    self = this
+    after {delay:(60-d.getSeconds())*1000} ^{ self.updateTime() }
+  },
+}
+
+layer1 = rootLayer.addSublayer UILayer {x:10, y:10, width:50, height:50}
+layer2 = rootLayer.addSublayer UILayer {x:200, y:200, width:70, height:50}
+
+layer1.addSublayer ClockLayer {width:100}
+layer2.addSublayer ClockLayer {x:10, y:10, width:50, height:50}
+
+    </script>
+    <style>
+      * { margin:0; padding:0; border:none; }
+      html {
+        background: black url(checker-pattern.png) repeat scroll top left;
+        color: white;
+        font-family: "Helvetica";
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body></body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=640,initial-scale=0.5,user-scalable=no">
+    <style>
+      * { margin:0; padding:0; border:none; }
+      body {
+        background: black url(checker-pattern.png) repeat scroll top left;
+        color: white;
+        font: 16px/200px "Helvetica";
+        text-align:center;
+        -webkit-user-select:none;
+      }
+    </style>
+    <script src="../move.js"></script>
+    <script>document.write('<'+'script src="../uilayer.js?'+(+new Date)+'"><'+'/script>');</script>
+    <script type="text/move">
+
+import UILayer
+UILayer.debug = true
+
+layer1 = UILayer {x:10, y:10, width:300, height:300, animated:true}
+layer2 = UILayer {x:50, y:50, width:200, height:200, animated:true}
+layer2.backgroundColor = 'salmon'
+layer2.element.innerText = 'Touch me'
+layer1.addSublayer layer2
+layer1.on 'touchstart', ^{
+  layer1.frame.x += 50
+  layer2.rotation.z += 20
+}
+document.body.appendChild layer1.element
+
+    </script>
+  </head>
+  <body></body>
+</html>

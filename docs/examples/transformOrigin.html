@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=640,initial-scale=0.5,user-scalable=no">
+    <script src="../move.js"></script>
+    <script>document.write('<'+'script src="../uilayer.js?'+(+new Date)+'"><'+'/script>');</script>
+    <script type="text/move">
+
+import UILayer
+UILayer.debug = true
+
+rootLayer = UILayer { x:100, y:100, width:100, height:100, animated: true }
+document.body.appendChild rootLayer.element
+
+print 'rootLayer.transformOrigin ->', rootLayer.transformOrigin
+
+after {delay:1000} ^{
+  rootLayer.scale = 2
+}
+after {delay:2000} ^{
+  rootLayer.transformOrigin = [0, 0]
+  print 'rootLayer.transformOrigin ->', rootLayer.transformOrigin
+  rootLayer.scale = 1
+  #rootLayer.rotation.x = 30
+}
+after {delay:3000} ^{
+  rootLayer.transformOrigin = [1, 1]
+  print 'rootLayer.transformOrigin ->', rootLayer.transformOrigin
+  rootLayer.scale = 2
+  #rootLayer.rotation.x = 60
+}
+
+    </script>
+    <style>
+      * { margin:0; padding:0; border:none; }
+      html {
+        background: black url(checker-pattern.png) repeat scroll top left;
+        color: white;
+        font-family: "Helvetica";
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body></body>
+</html>

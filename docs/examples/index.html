@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>UILayer examples</title>
+    <meta name="viewport" content="width=880">
+    <meta property="fb:admins" content="728642302">
+    <meta name="description" content="Examples of UILayer usage. UILayer is an API on top of the WebKit DOM for working with the concept of layers. High performance UI rendering and animation.">
+    <meta property="og:image" content="icon.png">
+    <meta property="og:site_name" content="rsms.me">
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Droid+Sans+Mono:normal" type="text/css">
+    <link rel="stylesheet" href="style.css" type="text/css">
+    <style type="text/css">
+      body {
+        position:absolute;
+        top:0; right:0; bottom:0; left:0;
+        margin:0; width:auto;
+        padding-left:2em;
+        overflow:hidden;
+      }
+      #source {
+        position:absolute;
+        top:0; right:0; bottom:0;
+        width: 800px;
+        -webkit-backface-visibility: hidden;
+        -webkit-transition: -webkit-transform 300ms ease;
+        -webkit-transform: translate3d(822px,0,0);
+        background:#eee;
+        border-left:1px solid rgba(0,0,0,0.25);
+        -moz-box-shadow: 0px 0 20px rgba(0,0,0,0.4);
+        -webkit-box-shadow: 0px 0 20px rgba(0,0,0,0.4);
+        box-shadow: 0px 0 20px rgba(0,0,0,0.4);
+      }
+      #source.open {
+        -webkit-transform: translate3d(0,0,0);
+      }
+      #source > pre {
+        position:absolute;
+        top:36px; right:0; bottom:0; left:0;
+        -webkit-transition: opacity 200ms ease;
+        opacity: 0;
+        border:none;
+        margin:0;
+        overflow: auto;
+        font-size:14px;
+      }
+      #source > h4 {
+        line-height:26px;
+        margin:5px 0 1em 0;
+        border-bottom:1px solid #ccc;
+        text-align:center;
+        padding-bottom:4px;
+      }
+      #source .close {
+        display:block;
+        position:absolute;
+        top:5px; left:5px;
+        width:24px; height:24px;
+        font: 20px/24px helvetica,arial,sans-serif;
+        text-decoration:none;
+        cursor:default;
+        color:#666;
+        vertical-align:bottom;
+        text-align:center;
+        -mox-border-radius:4px;
+        -webkit-border-radius:4px;
+        border-radius:4px;
+      }
+      #source .close:hover {
+        background:#ccc;
+        color:black;
+      }
+    </style>
+    <script src="prettify.js"></script>
+  </head>
+  <body>
+    <h1><a href="../">UILayer</a> <span style="color:#ccc">❯</span> Examples</h1>
+    <ul>
+      <li>anchor</li>
+      <li>animate-combo</li>
+      <li>debug</li>
+      <li>drawContent</li>
+      <li>example1-javascript</li>
+      <li>flip-book</li>
+      <li>hitTest</li>
+      <li>masksToBounds</li>
+      <li>perspective</li>
+      <li>rotation</li>
+      <li>subclassing</li>
+      <li>tag</li>
+      <li>transformOrigin</li>
+    </ul>
+    <div id="source"><h4></h4><pre class="prettyprint lang-html"></pre><a title="Close" class="close" href="javascript:closeSource()">×</a></div>
+    <script src="../jquery.min.js"></script>
+    <script>
+      var $sourcePane = jQuery('#source');
+      var $title       = $sourcePane.find('h4');
+      var $pre         = $sourcePane.find('pre');
+      function viewSource(path) {
+        $sourcePane.addClass('open');
+        $pre.css({opacity: 0});
+        $title.text(path);
+        $.get(path+'?'+(+new Date), function (body) {
+
+          // skip outer
+          var lang = 'html';
+          if (body.match(/<body>\s*<\/body>/)) {
+            var start, end, v = body.split('<'+'script type="text/move">');
+            if (v.length === 2) {
+              v = v[1].split('<'+'/script>');
+              body = v[0];
+              body = body.replace(/^[\s\r\n]+/m, '');
+              lang = 'mv';
+            }
+          }
+
+          // hacky and ugly, but feels kind of nice...
+          $pre.css({opacity: 1});
+          $pre.text(body);
+          $pre.addClass('prettyprint lang-'+lang);
+          prettyPrint();
+        });
+      }
+
+      function closeSource() {
+        $sourcePane.get(0).className = '';
+      }
+
+      var $ul = $('ul');
+      var $lis = $ul.find('li');
+      $lis.each(function (i, li) {
+        var url = $(li).text();
+        var html = '<a href="'+url+'.html">'+url+'</a>'
+        html += ' &nbsp; (<a href="javascript:viewSource(\''+url+'.html\')">view source</a>)';
+        li.innerHTML = html
+      })
+    </script>
+  </body>
+</html>
